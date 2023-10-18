@@ -1,8 +1,8 @@
 name = "DEkarPKMU"
+uuid = "e9f316a0-c0ef-4475-a185-5cd555ef6903"
 authors = ["Ole Volker Lenz <ole.lenz@gmx.net>"]
 version = "0.1.0"
-uuid = "e9f316a0-c0ef-4475-a185-5cd555ef6903"
 
 [deps]
+Clp = "e2554f3b-3117-50c0-817c-e040a3ddf72d"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
-
