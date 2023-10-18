@@ -1,5 +1,5 @@
-function solve_model()
-    model = Model(CLP.Optimizer);
+function solve_model(Optimizer)
+    model = Model(Optimizer);
 
     # variables of the model
     
@@ -14,7 +14,7 @@ function solve_model()
     @objective(model, Min, EAC);
     
     # constraints of the model
-    @constraint(model, EAC = (CAPEX - NPV_CF + NPV_ReInv - NPV_ResV) * CRF);  # calculating EAC
-    
+   # @constraint(model, EAC == (CAPEX - NPV_CF + NPV_ReInv - NPV_ResV) * CRF);  # calculating EAC
+    print("in here ");
     return 1;
 end
