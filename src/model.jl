@@ -1,5 +1,5 @@
-function solve_model(Optimizer)
-    model = Model(Optimizer);
+function solve_model(optimizer, data::Data)
+    model = Model(optimizer);
 
     # variables
 

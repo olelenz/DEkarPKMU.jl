@@ -190,7 +190,6 @@ function initDataXLSX(file::String)::Data
                                                                                                                     
     data.ellf = [Float64.(l_elec[12,1]), Float64.(l_elec[13,1]), Float64.(l_elec[14,1]), Float64.(l_elec[15,1])]; # electrolyzer load factor [%]                      -> x-axis [%]
     data.f_z = [Float64.(l_elec[12,2]), Float64.(l_elec[13,2]), Float64.(l_elec[14,2]), Float64.(l_elec[15,2])];  # electrolyzer efficiency factor in breakpoints [%] -> y-axis [%]
-  
 
     return data
 end
