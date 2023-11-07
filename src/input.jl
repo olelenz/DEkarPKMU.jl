@@ -85,6 +85,10 @@ mutable struct Data
     Data() = new()
 end
 
+function dataToJSON(data::Data)::String
+    return JSON3.write(data); 
+end
+
 
 function initDataXLSX(file::String)::Data
     data::Data = Data()

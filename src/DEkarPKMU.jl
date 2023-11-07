@@ -1,8 +1,8 @@
 module DEkarPKMU
 
-export solve_model, Data, initDataXLSX
+export solve_model, Data, initDataXLSX, dataToJSON
 
-using JuMP, XLSX
+using JuMP, XLSX, JSON3
 
 include(joinpath(@__DIR__, "input.jl"))
 include(joinpath(@__DIR__, "model.jl"))
