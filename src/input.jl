@@ -1,11 +1,10 @@
 mutable struct Data
-    periods::Matrix{Int64}
     p::Int64
     edem::Vector{Real}
     beta_buy::Vector{Float64}
     beta_sell::Vector{Float64}
-    re_PV::Matrix{Float64}
-    re_WT::Matrix{Float64}
+    re_PV::Vector{Float64}
+    re_WT::Vector{Float64}
 
     WACC::Float64
     inflation::Float64
@@ -84,9 +83,14 @@ mutable struct Data
     
     Data() = new()
 end
+JSON3.StructType(::Type{Data}) = JSON3.Mutable();
 
 function dataToJSON(data::Data)::String
     return JSON3.write(data); 
+end
+
+function JSONToData(json::String)::Data
+    return JSON3.read(json, Data);
 end
 
 
@@ -110,13 +114,12 @@ function initDataXLSX(file::String)::Data
     l_heat_ex::XLSX.Worksheet = x["heat_exchanger"];       # Technical and economic details of plate heat exchanger
     l_general::XLSX.Worksheet = x["General_Company_Data"]; # General Input Data
     
-    data.periods = Int64.(l_periods[:]);        # p
-    data.p = length(data.periods);                   # P
+    data.p = length(l_periods[:]);                   # P
     data.edem = [l_ed[r,5] for r in 9:(8+data.p)]   # energy demand in period p
     data.beta_buy = [l_epb[q,13] for q in 6:(5+data.p)] # energy purchase prices in period p [€/kWh]
     data.beta_sell = [l_eps[q,1] for q in 35:34+data.p]; # energy selling prices in period p
-    data.re_PV = Float64.(l_rg_PV[:]);# renewable generation (PV) in period p per installed kW
-    data.re_WT = Float64.(l_rg_WT[:]);# renewable generation (Wind Turbine) in period p per installed kW
+    data.re_PV = vec(Float64.(l_rg_PV[:]));# renewable generation (PV) in period p per installed kW
+    data.re_WT = vec(Float64.(l_rg_WT[:]));# renewable generation (Wind Turbine) in period p per installed kW
 
     #HESS parameter
     data.WACC = Float64.(l_general[5,2])           # WACC as factor
