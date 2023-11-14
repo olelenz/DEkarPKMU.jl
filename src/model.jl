@@ -2,7 +2,7 @@
 function solve_model(optimizer, data::Data)
     model = Model(optimizer);
 
-    set_optimizer_attributes(model, "MIPGap" => 0.07, "TimeLimit" => 60, "PreSOS2BigM" => 1500);  # time limit was at 25200
+    set_optimizer_attributes(model, "MIPGap" => 0.07, "TimeLimit" => 25200, "PreSOS2BigM" => 1500);  # time limit was at 25200
     set_optimizer_attribute(model, "NonConvex", 2)  # For quadratic Constraints.  With setting 2, non-convex quadratic problems are solved by means of translating them into bilinear form and applying spatial branching
     set_optimizer_attribute(model, "MIPFocus", 2)  # MIPFocus = 1: good quality feasible solutions; MIPFocus = 2: attention on proving optimality; MIPFocus = 3:  If the best objective bound is moving very slowly (focus on the bound)
 
