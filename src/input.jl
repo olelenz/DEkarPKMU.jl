@@ -27,18 +27,74 @@ const eff_H::Int64 = 99;
 # capacity_cost_H: capacity cost for H2 tank per kWh storage [€/kWh]
 const capacity_cost_H::Float64 = 1112/33.33;
 
-# OPEX for H2 tank in percentage of CAPEX
+# OPEX_H: OPEX for H2 tank in percentage of CAPEX
 const OPEX_H::Int64 = 2;
 
-function printConstants()::Nothing
-    println(p);
-    println(length(re_PV));
-    println(length(re_WT));
-    println(beta_buy_LP);
-    println(h_min);
-    println(capacity_cost_H);
-end
+# capacity_cost_EL:  Capacity cost of electrolyzer [€/kW]
+const capacity_cost_EL::Int64 = 1200;
 
+# OPEX_EL:  OPEX of electrolyzer [% of CAPEX per year]
+const OPEX_EL::Float64 = 2.5;
+
+# waste_heat_EL:  Waste heat from fuel cell [kWh_th / kWh_H2 input]
+const waste_heat_EL::Float64 = 0.13;
+
+# capacity_cost_FC: Capacity cost of fuel cell [€/kW]
+const capacity_cost_FC::Int64 = 1400;
+
+# OPEX_FC: OPEX of fuel cell [% of CAPEX per year]
+const OPEX_FC::Int64 = 1;
+
+# waste_heat_FC: Waste heat from fuel cell [kWh_th / kWh_H2 input]
+const waste_heat_FC::Float64 = 0.35;
+
+# OPEX_bat: OPEX of battery [% of CAPEX per year]
+const OPEX_bat::Int64 = 2;
+
+# SOC_min: Minimum SOC of battery [%]
+const SOC_min::Float64 = 0.2;
+
+# SOC_max: Maximum SOC of battery [%]
+const SOC_max::Float64 = 0.8;
+
+# SOC_init: Initial SOC of battery [%]
+const SOC_init::Float64 = 0.6;
+
+# eta_bat_in: Charging Efficiency [%]
+const eta_bat_in::Float64 = 0.98;
+
+# eta_bat_out: Discharging Efficiency [%]
+const eta_bat_out::Float64 = 0.97;
+
+# max_duration: max. duration energy can be stored in battery (battery = short-term storage)
+const max_duration::Int64 = 8;
+
+# self_discharge: self-discharge factor of battery per hour
+const self_discharge::Float64 = (((1+(0.0245/100))^(1/24))-1)*100;
+
+# capacity_cost_heat_exchanger: Capacity cost for heat exchanger [€/kW]
+const capacity_cost_heat_exchanger::Float64 = 400.0;
+
+# OPEX_fix_heat_exchanger: Fix OPEX heat exchanger [€/kW]
+const OPEX_fix_heat_exchanger::Int64 = 8;
+
+# OPEX_var_heat_exchanger: Variable OPEX heat exchanger [€/kW]
+const OPEX_var_heat_exchanger::Float64 = 0.0175;
+
+# eta_heat_exchanger: Efficiency of heat exchanger
+const eta_heat_exchanger::Float64 = 0.9;
+
+# fclf: fuel cell load factor [%]
+const fclf::Vector{Float64} = [0.0, 0.1, 0.4, 1.0];
+
+# f_x: fuel cell efficiency factor in breakpoints [%]
+const f_x::Vector{Float64} = [0.0, 0.5, 0.6, 0.5];
+
+# ellf: electrolyzer load factor [%]
+const ellf::Vector{Float64} = [0.0, 0.2, 0.6, 1.0];
+
+# f_z: electrolyzer efficiency factor in breakpoints [%]
+const f_z::Vector{Float64} = [0.0, 0.46, 0.6, 0.58];
 
 mutable struct Data
     p::Int64  # constant
@@ -62,15 +118,15 @@ mutable struct Data
     capacity_cost_H::Float64  # constant
     OPEX_H::Int64  # constant
 
-    capacity_cost_EL::Int64
-    OPEX_EL::Float64
-    waste_heat_EL::Float64
-    repl_factor_EL_NPV::Float64
+    capacity_cost_EL::Int64  # constant
+    OPEX_EL::Float64  # constant
+    waste_heat_EL::Float64  # constant
+    repl_factor_EL_NPV::Float64  # calculated depending on user input
 
-    capacity_cost_FC::Int64
-    OPEX_FC::Int64
-    waste_heat_FC::Float64
-    repl_factor_FC_NPV::Float64
+    capacity_cost_FC::Int64  # constant
+    OPEX_FC::Int64  # constant
+    waste_heat_FC::Float64  # constant
+    repl_factor_FC_NPV::Float64  # calculated depending on user input
 
     capacity_cost_PV1::Int64
     capacity_cost_PV2::Int64
@@ -99,29 +155,29 @@ mutable struct Data
     capacity_cost_bat4::Int64
     capacity_cost_bat5::Int64
     capacity_cost_bat6::Int64
-    OPEX_bat::Int64
-    SOC_min::Float64
-    SOC_max::Float64
-    SOC_init::Float64
-    eta_bat_in::Float64
-    eta_bat_out::Float64
-    max_duration::Int64
-    self_discharge::Float64
-    repl_factor_bat_NPV::Float64
+    OPEX_bat::Int64  # constant
+    SOC_min::Float64  # constant
+    SOC_max::Float64  # constant
+    SOC_init::Float64  # constant
+    eta_bat_in::Float64  # constant
+    eta_bat_out::Float64  # constant
+    max_duration::Int64  # constant
+    self_discharge::Float64  # constant
+    repl_factor_bat_NPV::Float64  # calculated depending on user input
 
-    capacity_cost_heat_exchanger::Float64
-    OPEX_fix_heat_exchanger::Int64
-    OPEX_var_heat_exchanger::Float64
-    eta_heat_exchanger::Float64
+    capacity_cost_heat_exchanger::Float64  # constant
+    OPEX_fix_heat_exchanger::Int64  # constant
+    OPEX_var_heat_exchanger::Float64  # constant
+    eta_heat_exchanger::Float64  # constant
 
-    max_capa_PV::Float64
-    max_capa_WT::Float64
+    max_capa_PV::Float64  # calculated depending on user input
+    max_capa_WT::Float64  # calculated depending on user input
 
-    fclf::Vector{Float64}
-    f_x::Vector{Float64}
+    fclf::Vector{Float64}  # constant
+    f_x::Vector{Float64}  # constant
 
-    ellf::Vector{Float64}
-    f_z::Vector{Float64}
+    ellf::Vector{Float64}  # constant
+    f_z::Vector{Float64}  # constant
     
     Data() = new()
 end
