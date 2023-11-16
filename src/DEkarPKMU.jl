@@ -1,6 +1,6 @@
 module DEkarPKMU
 
-export solve_model, Data, initDataXLSX, dataToJSON
+export solve_model, solve_model_fast, Data, initDataXLSX, initData, dataToJSON
 
 using JuMP, XLSX, JSON3
 
