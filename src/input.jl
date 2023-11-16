@@ -191,11 +191,50 @@ function JSONToData(json::String)::Data
     return JSON3.read(json, Data);
 end
 
+function initData(inputToSpecify::String)::Data
+    println(inputToSpecify);
+    data::Data = Data();
+
+    data.p = p;
+    data.re_PV = re_PV;
+    data.re_WT = re_WT;
+    data.beta_buy_LP = beta_buy_LP;
+    data.h_min = h_min;
+    data.h_max = h_max;
+    data.h_init = h_init;
+    data.eff_H = eff_H;
+    data.capacity_cost_H = capacity_cost_H;
+    data.OPEX_H = OPEX_H;
+    data.capacity_cost_EL = capacity_cost_EL;
+    data.OPEX_EL = OPEX_EL;
+    data.waste_heat_EL = waste_heat_EL;
+    data.capacity_cost_FC = capacity_cost_FC;
+    data.OPEX_FC = OPEX_FC;
+    data.waste_heat_FC = waste_heat_FC;
+    data.OPEX_bat = OPEX_bat;
+    data.SOC_min = SOC_min;
+    data.SOC_max = SOC_max;
+    data.SOC_init = SOC_init;
+    data.eta_bat_in = eta_bat_in;
+    data.eta_bat_out = eta_bat_out;
+    data.max_duration = max_duration;
+    data.self_discharge = self_discharge;
+    data.capacity_cost_heat_exchanger = capacity_cost_heat_exchanger;
+    data.OPEX_fix_heat_exchanger = OPEX_fix_heat_exchanger;
+    data.OPEX_var_heat_exchanger = OPEX_var_heat_exchanger;
+    data.eta_heat_exchanger = eta_heat_exchanger;
+    data.fclf = fclf;
+    data.f_x = f_x;
+    data.ellf = ellf;
+    data.f_z = f_z;
+
+    return data;
+end
 
 function initDataXLSX(file::String)::Data
-    data::Data = Data()
+    data::Data = Data();
     
-    x::XLSX.XLSXFile = XLSX.readxlsx(file)
+    x::XLSX.XLSXFile = XLSX.readxlsx(file);
 
     l_epb::XLSX.Worksheet = x["eur_purchase"];             # Energy purchase prices per hour (incl. grid fees per kWh, taxes, levies)
     l_eps::XLSX.Worksheet = x["eur_sale"];                 # Energy selling price
@@ -213,16 +252,16 @@ function initDataXLSX(file::String)::Data
     l_general::XLSX.Worksheet = x["General_Company_Data"]; # General Input Data
     
     data.p = length(l_periods[:]);                   # P
-    data.edem = [l_ed[r,5] for r in 9:(8+data.p)]   # energy demand in period p
-    data.beta_buy = [l_epb[q,13] for q in 6:(5+data.p)] # energy purchase prices in period p [€/kWh]
+    data.edem = [l_ed[r,5] for r in 9:(8+data.p)];   # energy demand in period p
+    data.beta_buy = [l_epb[q,13] for q in 6:(5+data.p)]; # energy purchase prices in period p [€/kWh]
     data.beta_sell = [l_eps[q,1] for q in 35:34+data.p]; # energy selling prices in period p
     data.re_PV = vec(Float64.(l_rg_PV[:]));# renewable generation (PV) in period p per installed kW
     data.re_WT = vec(Float64.(l_rg_WT[:]));# renewable generation (Wind Turbine) in period p per installed kW
 
     #HESS parameter
-    data.WACC = Float64.(l_general[5,2])           # WACC as factor
-    data.inflation = Float64.(l_general[6,2])      # Inflation as factor
-    data.CRF_project = Float64.(l_general[11,2])   # CRF of project
+    data.WACC = Float64.(l_general[5,2]);           # WACC as factor
+    data.inflation = Float64.(l_general[6,2]);      # Inflation as factor
+    data.CRF_project = Float64.(l_general[11,2]);   # CRF of project
     
     data.beta_buy_LP = Float64.(l_epb[6,14])          # Grid fee -> power price [€/kW]
     data.heat_price = Float64.(l_elec[19,2]);      # Heat price for "Fernwärme" [€/kWh_th]
@@ -237,57 +276,57 @@ function initDataXLSX(file::String)::Data
     data.capacity_cost_EL = Int64.(l_elec[3,2]);      # Capacity cost of electrolyzer [€/kW]
     data.OPEX_EL = Float64.(l_elec[6,2]);             # OPEX of electrolyzer [% of CAPEX per year]
     data.waste_heat_EL = Float64.(l_elec[7,2]);       # Waste heat from electrolyzer [kWh_th / kWh_el electricity input]
-    data.repl_factor_EL_NPV = Float64.(l_elec[23,2])  # Replacement factor because lifetime < projecttime (Results in replacement + Invest NPV when multiplying with CAPEX)
+    data.repl_factor_EL_NPV = Float64.(l_elec[23,2]);  # Replacement factor because lifetime < projecttime (Results in replacement + Invest NPV when multiplying with CAPEX)
 
     data.capacity_cost_FC = Int64.(l_rfc[11,2]);      # Capacity cost of fuel cell [€/kW]
     data.OPEX_FC = Int64.(l_rfc[14,2]);               # OPEX of fuel cell [% of CAPEX per year]
     data.waste_heat_FC = Float64.(l_rfc[15,2]);       # Waste heat from fuel cell [kWh_th / kWh_H2 input]
-    data.repl_factor_FC_NPV = Float64.(l_rfc[19,2])   # Replacement factor because lifetime < projecttime (Results in replacement + Invest NPV when multiplying with CAPEX)
+    data.repl_factor_FC_NPV = Float64.(l_rfc[19,2]);   # Replacement factor because lifetime < projecttime (Results in replacement + Invest NPV when multiplying with CAPEX)
    
-    data.capacity_cost_PV1 = Int64.(l_a_PV[4,2])      # Capacity cost for PV system < 30 kW [€/kW]
-    data.capacity_cost_PV2 = Int64.(l_a_PV[4,3])      # Capacity cost for PV system < 1000 kW [€/kW]
-    data.capacity_cost_PV3 = Int64.(l_a_PV[4,4])      # Capacity cost for PV system > 1000 kW [€/kW]
-    data.capacity_cost_WT1 = Int64.(l_a_WT[2,2])      # Capacity cost for WT system < 100 [€/kW]
-    data.capacity_cost_WT2 = Int64.(l_a_WT[2,3])      # Capacity cost for WT system < 1000 kW [€/kW]
-    data.capacity_cost_WT3 = Int64.(l_a_WT[2,4])      # Capacity cost for WT system > 1000 kW [€/kW]
+    data.capacity_cost_PV1 = Int64.(l_a_PV[4,2]);      # Capacity cost for PV system < 30 kW [€/kW]
+    data.capacity_cost_PV2 = Int64.(l_a_PV[4,3]);      # Capacity cost for PV system < 1000 kW [€/kW]
+    data.capacity_cost_PV3 = Int64.(l_a_PV[4,4]);      # Capacity cost for PV system > 1000 kW [€/kW]
+    data.capacity_cost_WT1 = Int64.(l_a_WT[2,2]);      # Capacity cost for WT system < 100 [€/kW]
+    data.capacity_cost_WT2 = Int64.(l_a_WT[2,3]);      # Capacity cost for WT system < 1000 kW [€/kW]
+    data.capacity_cost_WT3 = Int64.(l_a_WT[2,4]);      # Capacity cost for WT system > 1000 kW [€/kW]
     
-    data.OPEX_PV1 = Float64.(l_a_PV[5,2])           # Annual OPEX for PV system < 30 kW [€/kW]
-    data.OPEX_PV2 = Float64.(l_a_PV[5,3])           # Annual OPEX for PV system < 1000 kW [€/kW]
-    data.OPEX_PV3 = Float64.(l_a_PV[5,4])           # Annual OPEX for PV system > 1000 kW [€/kW]
-    data.OPEX_WT_fix = Int64.(l_a_WT[5,2])          # Fix OPEX cost WT [€/kW]
-    data.OPEX_WT_var = Float64.(l_a_WT[6,2])        # Variable OPEX cost WT [€/kWh]
+    data.OPEX_PV1 = Float64.(l_a_PV[5,2]);           # Annual OPEX for PV system < 30 kW [€/kW]
+    data.OPEX_PV2 = Float64.(l_a_PV[5,3]);           # Annual OPEX for PV system < 1000 kW [€/kW]
+    data.OPEX_PV3 = Float64.(l_a_PV[5,4]);           # Annual OPEX for PV system > 1000 kW [€/kW]
+    data.OPEX_WT_fix = Int64.(l_a_WT[5,2]);          # Fix OPEX cost WT [€/kW]
+    data.OPEX_WT_var = Float64.(l_a_WT[6,2]);        # Variable OPEX cost WT [€/kWh]
     
-    data.residualValue_PV = Float64.(l_a_PV[18,2])                   # Factor to multiply with Investment to get NPV of residual value
-    data.residualValue_WT = Float64.(l_a_WT[14,2])                   # Factor to multiply with Investment to get NPV of residual value
-    data.residualValue_bat = Float64.(l_battery[30,2])               # Factor to multiply with Investment to get NPV of residual value
-    data.residualValue_EL = Float64.(l_elec[25,2])                   # Factor to multiply with Investment to get NPV of residual value
-    data.residualValue_H = Float64.(l_tank[17,2])                    # Factor to multiply with Investment to get NPV of residual value
-    data.residualValue_FC = Float64.(l_rfc[21,2])                    # Factor to multiply with Investment to get NPV of residual value
-    data.residualValue_heat_exchanger = Float64.(l_heat_ex[12,2])    # Factor to multiply with Investment to get NPV of residual value
+    data.residualValue_PV = Float64.(l_a_PV[18,2]);                   # Factor to multiply with Investment to get NPV of residual value
+    data.residualValue_WT = Float64.(l_a_WT[14,2]);                   # Factor to multiply with Investment to get NPV of residual value
+    data.residualValue_bat = Float64.(l_battery[30,2]);               # Factor to multiply with Investment to get NPV of residual value
+    data.residualValue_EL = Float64.(l_elec[25,2]);                   # Factor to multiply with Investment to get NPV of residual value
+    data.residualValue_H = Float64.(l_tank[17,2]);                    # Factor to multiply with Investment to get NPV of residual value
+    data.residualValue_FC = Float64.(l_rfc[21,2]);                    # Factor to multiply with Investment to get NPV of residual value
+    data.residualValue_heat_exchanger = Float64.(l_heat_ex[12,2]);    # Factor to multiply with Investment to get NPV of residual value
 
-    data.capacity_cost_bat1 = Int64.(l_battery[5,2])  # Capacity cost for battery system < 5 kWh [€/kWh]
-    data.capacity_cost_bat2 = Int64.(l_battery[6,2])  # Capacity cost for battery system < 10 kWh [€/kWh]
-    data.capacity_cost_bat3 = Int64.(l_battery[7,2])  # Capacity cost for battery system < 30 kWh [€/kWh]
-    data.capacity_cost_bat4 = Int64.(l_battery[8,2])  # Capacity cost for battery system < 250 kWh [€/kWh]
-    data.capacity_cost_bat5 = Int64.(l_battery[9,2])  # Capacity cost for battery system < 1000 kWh [€/kWh]
-    data.capacity_cost_bat6 = Int64.(l_battery[10,2]) # Capacity cost for battery system > 1000 kWh [€/kWh]
-    data.OPEX_bat = Int64.(l_battery[23,2])               # OPEX of battery [% of CAPEX per year]
-    data.SOC_min = Int64.(l_battery[14,2])/100            # Minimum SOC of battery [%]
-    data.SOC_max = Int64.(l_battery[15,2])/100            # Maximum SOC of battery [%]
-    data.SOC_init = Int64.(l_battery[13,2])/100           # Initial SOC of battery [%]
-    data.eta_bat_in = Int64.(l_battery[18,2])/100           # Charging Efficiency [%]
-    data.eta_bat_out = Int64.(l_battery[19,2])/100          # Discharging Efficiency [%]
-    data.max_duration = Int64.(l_battery[16,2])           # max. duration energy can be stored in battery (battery = short-term storage)
-    data.self_discharge = Float64.(l_battery[21,2])       # self-discharge factor of battery per hour      
-    data.repl_factor_bat_NPV = Float64.(l_battery[28,2])  # Replacement factor because lifetime < projecttime (Results in replacement + Invest NPV when multiplying with CAPEX)
+    data.capacity_cost_bat1 = Int64.(l_battery[5,2]);  # Capacity cost for battery system < 5 kWh [€/kWh]
+    data.capacity_cost_bat2 = Int64.(l_battery[6,2]);  # Capacity cost for battery system < 10 kWh [€/kWh]
+    data.capacity_cost_bat3 = Int64.(l_battery[7,2]);  # Capacity cost for battery system < 30 kWh [€/kWh]
+    data.capacity_cost_bat4 = Int64.(l_battery[8,2]);  # Capacity cost for battery system < 250 kWh [€/kWh]
+    data.capacity_cost_bat5 = Int64.(l_battery[9,2]);  # Capacity cost for battery system < 1000 kWh [€/kWh]
+    data.capacity_cost_bat6 = Int64.(l_battery[10,2]); # Capacity cost for battery system > 1000 kWh [€/kWh]
+    data.OPEX_bat = Int64.(l_battery[23,2]);               # OPEX of battery [% of CAPEX per year]
+    data.SOC_min = Int64.(l_battery[14,2])/100;            # Minimum SOC of battery [%]
+    data.SOC_max = Int64.(l_battery[15,2])/100;            # Maximum SOC of battery [%]
+    data.SOC_init = Int64.(l_battery[13,2])/100;           # Initial SOC of battery [%]
+    data.eta_bat_in = Int64.(l_battery[18,2])/100;           # Charging Efficiency [%]
+    data.eta_bat_out = Int64.(l_battery[19,2])/100;          # Discharging Efficiency [%]
+    data.max_duration = Int64.(l_battery[16,2]);           # max. duration energy can be stored in battery (battery = short-term storage)
+    data.self_discharge = Float64.(l_battery[21,2]);       # self-discharge factor of battery per hour      
+    data.repl_factor_bat_NPV = Float64.(l_battery[28,2]);  # Replacement factor because lifetime < projecttime (Results in replacement + Invest NPV when multiplying with CAPEX)
 
-    data.capacity_cost_heat_exchanger = Float64.(l_heat_ex[4,2])  # Capacity cost for heat exchanger [€/kW]
-    data.OPEX_fix_heat_exchanger = Int64.(l_heat_ex[5,2])         # Fix OPEX heat exchanger [€/kW]
-    data.OPEX_var_heat_exchanger = Float64.(l_heat_ex[6,2])       # Variable OPEX heat exchanger [€/kWh]
-    data.eta_heat_exchanger = Float64.(l_heat_ex[8,2])/100          # Efficiency of heat exchanger
+    data.capacity_cost_heat_exchanger = Float64.(l_heat_ex[4,2]);  # Capacity cost for heat exchanger [€/kW]
+    data.OPEX_fix_heat_exchanger = Int64.(l_heat_ex[5,2]);         # Fix OPEX heat exchanger [€/kW]
+    data.OPEX_var_heat_exchanger = Float64.(l_heat_ex[6,2]);       # Variable OPEX heat exchanger [€/kWh]
+    data.eta_heat_exchanger = Float64.(l_heat_ex[8,2])/100;          # Efficiency of heat exchanger
 
-    data.max_capa_PV = Float64.(l_a_PV[16,2])                     # Maximum PV capacity [kW]
-    data.max_capa_WT = Float64.(l_a_WT[12,2])                     # Maximum WT capacity [kW]
+    data.max_capa_PV = Float64.(l_a_PV[16,2]);                     # Maximum PV capacity [kW]
+    data.max_capa_WT = Float64.(l_a_WT[12,2]);                     # Maximum WT capacity [kW]
 
     #sos2 parameters for efficiency calculation of fuel cell -> Efficiency Breakpoints of load & efficiency (Nonlinearity - 4 Breakpoints)
     data.fclf = [Float64.(l_rfc[2,1]), Float64.(l_rfc[3,1]), Float64.(l_rfc[4,1]), Float64.(l_rfc[5,1])]; # fuel cell load factor [%]                                 -> x-axis [%]                                                                   
@@ -296,7 +335,7 @@ function initDataXLSX(file::String)::Data
     data.ellf = [Float64.(l_elec[12,1]), Float64.(l_elec[13,1]), Float64.(l_elec[14,1]), Float64.(l_elec[15,1])]; # electrolyzer load factor [%]                      -> x-axis [%]
     data.f_z = [Float64.(l_elec[12,2]), Float64.(l_elec[13,2]), Float64.(l_elec[14,2]), Float64.(l_elec[15,2])];  # electrolyzer efficiency factor in breakpoints [%] -> y-axis [%]
 
-    return data
+    return data;
 end
 
 
