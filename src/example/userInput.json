@@ -1,11 +1,22 @@
 {
-    "key":"(example value)[data type] - explanation",
+    "key":"(example value)[data type] - explanation (unit)",
 
-    "edem":"([2.544, 1.32525,...] or 609584.869)[[float] or float] - energy demand, either a vector consisting of 8760 values or the total demand (one value)",
-    "shifts":"either 0, 1, 2 or 3 - number of shifts used in the company, can only be 0 if edem is a vector of 8760 values",
-    "beta_buy":"(0.15686)[float] - energy buying price, one value",
-    "beta_sell":"(0.05423)[float] - energy selling price, one value",
-    "WACC":"(0.086)[float] - weighted average cost of capital",
-    "inflation":"(0.02)[float] - inflation",
-    "heat_price":"(0.0986)[float] - heat price"
+    "usage_WT":"(0 or 1)[bool] - if WT is used (-)",
+    "usage_PV":"(0 or 1)[bool] - if PV is used (-)",
+    "usage_bat":"(0 or 1)[bool] - if battery is used (-)",
+    "usage_H":"(0 or 1)[bool] - if H2 is used (-)",
+    "years":"(20)[int] - amount of years for the project (years)",
+    "NETZENTGELT":"TODO",
+    "WAERMEBEDARF":"TODO",
+    "shift_edem":"(0 or 1)[bool] - if the energy demand can be shifted to get better results (-)",
+    "edem":"([2.544, 1.32525,...] or 609584.869)[[float] or float] - energy demand, either a vector consisting of 8760 values or the total demand as one value (kW)",
+    "shifts":"either 0, 1, 2 or 3 - number of shifts used in the company, can only be 0 if edem is a vector of 8760 values (-)",
+    "beta_buy":"(0.15686)[float] - energy buying price, one value (EUR/kWh)",
+    "beta_sell":"(0.05423)[float] - energy selling price, one value (EUR/kWh)",
+    "WACC":"(0.086)[float] - weighted average cost of capital (percent as decimal from 0 to 1)",
+    "inflation":"(0.02)[float] - inflation (percent as decimal from 0 to 1)",
+    "heat_price":"(0.0986)[float] - heat price (EUR/kWh)",
+    "area_PV":"(10000.0)[float] - area available for the PV system (m^2)",
+    "area_WT":"(10000.0)[float] - area available for the WT system (m^2)",
+    "max_height_WT":"(15.5)[float] - maximum height for the WT system (m)"
 }
