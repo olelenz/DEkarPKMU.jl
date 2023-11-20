@@ -1,0 +1,11 @@
+{
+    "key":"(example value)[data type] - explanation",
+
+    "edem":"([2.544, 1.32525,...] or 609584.869)[[float] or float] - energy demand, either a vector consisting of 8760 values or the total demand (one value)",
+    "shifts":"either 0, 1, 2 or 3 - number of shifts used in the company, can only be 0 if edem is a vector of 8760 values",
+    "beta_buy":"(0.15686)[float] - energy buying price, one value",
+    "beta_sell":"(0.05423)[float] - energy selling price, one value",
+    "WACC":"(0.086)[float] - weighted average cost of capital",
+    "inflation":"(0.02)[float] - inflation",
+    "heat_price":"(0.0986)[float] - heat price"
+}
