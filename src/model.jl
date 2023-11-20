@@ -202,18 +202,27 @@ function solve_model(optimizer, data::Data)
 end
 
 function solve_model_fast(optimizer, data::Data)
+    #if(true)
+    #    juniper = optimizer_with_attributes(
+    #        Juniper.Optimizer,
+    #        "nl_solver" => optimizer_with_attributes(MadNLP.Optimizer),
+    #        "mip_solver" => optimizer_with_attributes(HiGHS.Optimizer),
+    #        )
+    #    model = Model(juniper);
+    #else
+    #    model = Model(optimizer);
+    #end
     model = Model(optimizer);
 
-    set_optimizer_attributes(model, "MIPGap" => 0.07, "TimeLimit" => 25200, "PreSOS2BigM" => 1500);  # time limit was at 25200
-    set_optimizer_attribute(model, "NonConvex", 2)  # For quadratic Constraints.  With setting 2, non-convex quadratic problems are solved by means of translating them into bilinear form and applying spatial branching
-    set_optimizer_attribute(model, "MIPFocus", 1)  # MIPFocus = 1: good quality feasible solutions; MIPFocus = 2: attention on proving optimality; MIPFocus = 3:  If the best objective bound is moving very slowly (focus on the bound)
-
+    #set_optimizer_attributes(model, "MIPGap" => 0.07, "TimeLimit" => 25200, "PreSOS2BigM" => 1500);  # time limit was at 25200
+    #set_optimizer_attribute(model, "NonConvex", 2)  # For quadratic Constraints.  With setting 2, non-convex quadratic problems are solved by means of translating them into bilinear form and applying spatial branching
+    #set_optimizer_attribute(model, "MIPFocus", 3)  # MIPFocus = 1: good quality feasible solutions; MIPFocus = 2: attention on proving optimality; MIPFocus = 3:  If the best objective bound is moving very slowly (focus on the bound)
 
     
     # Parameter
     #Capacity_cost_PV = [data.capacity_cost_PV1, data.capacity_cost_PV2, data.capacity_cost_PV3];
     #Capacity_cost_WT = [data.capacity_cost_WT1, data.capacity_cost_WT2, data.capacity_cost_WT3];
-    OPEX_pv0 = [data.OPEX_PV1, data.OPEX_PV2, data.OPEX_PV3];
+    #OPEX_pv0 = [data.OPEX_PV1, data.OPEX_PV2, data.OPEX_PV3];
     
     # variables
 
@@ -312,9 +321,9 @@ function solve_model_fast(optimizer, data::Data)
     @constraint(model, [p=1:data.p], FC_output[p] <= c_FC); # fuel cell capacity    
     
     @constraint(model, r_EL .== data.ellf .* c_EL);
-    @constraint(model, [p=1:data.p], EL_output[p] == sum(V[z,p]*data.f_z[z]*R_EL[p] for z=1:Z));
+    #        @constraint(model, [p=1:data.p], EL_output[p] == sum(V[z,p]*data.f_z[z]*R_EL[p] for z=1:Z));
     @constraint(model, r_FC .== data.fclf .* c_FC);                                                  # "real" fuel cell load [kW]                  
-    @constraint(model, [p=1:data.p], FC_output[p] == sum(Λ[b,p]*data.f_x[b]*R_FC[p] for b=1:B));
+    #        @constraint(model, [p=1:data.p], FC_output[p] == sum(Λ[b,p]*data.f_x[b]*R_FC[p] for b=1:B));
     
     # @constraint(model, [p=1:data.p], sum(Λ[b,p] for b=1:B) == 1);                    #sos2 constraint 1: Breakpoints must sum up to 1    
     # @constraint(model, [p=1:data.p], Λ[1:B,p] in MOI.SOS2([1.0,2.0,3.0,4.0]));       #sos2 constraint 2: Only 2 adjacent Breakpoints can be >0       
