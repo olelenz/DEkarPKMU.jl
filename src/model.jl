@@ -202,16 +202,6 @@ function solve_model(optimizer, data::Data)
 end
 
 function solve_model_fast(optimizer, data::Data)
-    #if(true)
-    #    juniper = optimizer_with_attributes(
-    #        Juniper.Optimizer,
-    #        "nl_solver" => optimizer_with_attributes(MadNLP.Optimizer),
-    #        "mip_solver" => optimizer_with_attributes(HiGHS.Optimizer),
-    #        )
-    #    model = Model(juniper);
-    #else
-    #    model = Model(optimizer);
-    #end
     model = Model(optimizer);
 
     #set_optimizer_attributes(model, "MIPGap" => 0.07, "TimeLimit" => 25200, "PreSOS2BigM" => 1500);  # time limit was at 25200
@@ -240,7 +230,6 @@ function solve_model_fast(optimizer, data::Data)
     @variable(model, Total_WT_GEN >=0)           # Total WT generation over period P [kWh]
     @variable(model, Total_buy >=0)              # Total energy purchased [kWh]
     @variable(model, Total_sell >=0)             # Total energy sold [kWh]
-    # return -1;  # request gurobi license while on campus
     @variable(model, E_sold[1:data.p] >= 0);          # not-negative: p Energy sold in kWh/period in period p
     @variable(model, E_purchased[1:data.p] >= 0);     # not-negative: p Energy purchased in kWh/period in period p
     @variable(model, max_E_purchased >=0);       # max. purchased energy per period       
