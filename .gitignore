@@ -23,5 +23,8 @@ docs/site/
 # environment.
 Manifest.toml
 
-#MacOS
+# MacOS
 .DS_Store
+
+# IntelliJ
+.idea

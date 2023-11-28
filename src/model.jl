@@ -127,7 +127,7 @@ function solve_model(optimizer, data::Data)
     @constraint(model, [p=1:data.p], used_heat_FC[p] <= c_heat_exchanger_FC);                        # usable heat is lower or same as capacity of heat exchanger
     @constraint(model, Invest_heat_exchanger_FC == c_heat_exchanger_FC * data.capacity_cost_heat_exchanger)
     @constraint(model, OPEX_heat_exchanger_FC == c_heat_exchanger_FC * data.OPEX_fix_heat_exchanger + sum(used_heat_FC[x]*data.OPEX_var_heat_exchanger for x=1:data.p))
-    @constraint(model, [p=1:data.p], used_heat_EL[p] <= R_EL[p] * data.waste_heat_EL * data.eta_heat_exchanger); # usable heat is heat output of fuel cell multiplied with efficiency
+    @constraint(model, [p=1:data.p], used_heat_EL[p] <= R_EL[p] * data.waste_heat_EL * data.eta_heat_exchanger); # usable heat is heat output of electrolyzer multiplied with efficiency
     @constraint(model, [p=1:data.p], used_heat_EL[p] <= c_heat_exchanger_EL);                        # usable heat is lower or same as capacity of heat exchanger
     @constraint(model, Invest_heat_exchanger_EL == c_heat_exchanger_EL * data.capacity_cost_heat_exchanger)
     @constraint(model, OPEX_heat_exchanger_EL == c_heat_exchanger_EL * data.OPEX_fix_heat_exchanger + sum(used_heat_EL[x]*data.OPEX_var_heat_exchanger for x=1:data.p))
@@ -213,6 +213,7 @@ function solve_model_fast(optimizer, data::Data)
     #Capacity_cost_PV = [data.capacity_cost_PV1, data.capacity_cost_PV2, data.capacity_cost_PV3];
     #Capacity_cost_WT = [data.capacity_cost_WT1, data.capacity_cost_WT2, data.capacity_cost_WT3];
     #OPEX_pv0 = [data.OPEX_PV1, data.OPEX_PV2, data.OPEX_PV3];
+    #Capacity_cost_bat = [data.capacity_cost_bat1, data.capacity_cost_bat2, data.capacity_cost_bat3, data.capacity_cost_bat4, data.capacity_cost_bat5, data.capacity_cost_bat6];
     
     # variables
 
@@ -245,7 +246,7 @@ function solve_model_fast(optimizer, data::Data)
     @variable(model, Invest_WT >=0)
     @variable(model, OPEX_WT >=0)
 
-    # @variable(model, j[1:6], Bin)
+    #@variable(model, j[1:6], Bin)
     @variable(model, c_bat >=0)
     @variable(model, Invest_bat >=0)
     @variable(model, R_Bat_in[1:data.p] >= 0);   # power consumed to charge the battery
