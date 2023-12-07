@@ -240,8 +240,12 @@ function JSONToData(json::String)::Data
 end
 
 function initData(inputToSpecify::String)::Data
+    # TODO: validate input
+    
     println(inputToSpecify);
     data::Data = Data();
+
+    # TODO: add function to add all param
 
     data.p = p_const;
     data.re_PV = re_PV_const;

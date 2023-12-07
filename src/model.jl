@@ -1,4 +1,4 @@
-#using .DEkarPKMU  # take out to use this file outside the module
+using .DEkarPKMU  # take out to use this file outside the module
 function solve_model(optimizer, data::Data)
     model = Model(optimizer);
 
@@ -409,4 +409,25 @@ function solve_model_fast(optimizer, data::Data)
     #OPTIMIZE model
     optimize!(model);
     return model;
+end
+
+function solve_model_test(optimizer, data::Data)
+    model = Model(optimizer);
+
+    @variable(model, x >= 0);
+    @variable(model, y >= 0);
+    @variable(model, income);
+
+    @objective(model, Max, income);
+    
+    @constraint(model, x <= data.p / 1000);
+    @constraint(model, y <= data.eff_H / 100);
+    @constraint(model, income == 0.5*x + 3*y);
+
+    optimize!(model);
+
+    #sleep(10);  # sleeps ten seconds to simulate bigger model
+    
+    return model;
+
 end
