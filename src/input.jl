@@ -334,31 +334,65 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
         throw(AssertionError("User input not valid (usage_WT) - should be either 0 or 1."));
     end
     data.usage_WT = userData["usage_WT"];
+
     if(userData["usage_PV"] != 0 && userData["usage_PV"] != 1)
         throw(AssertionError("User input not valid (usage_PV) - should be either 0 or 1."));
     end
     data.usage_PV = userData["usage_PV"];
+
     if(userData["usage_bat"] != 0 && userData["usage_bat"] != 1)
         throw(AssertionError("User input not valid (usage_bat) - should be either 0 or 1."));
     end
     data.usage_bat = userData["usage_bat"];
+
     if(userData["usage_H"] != 0 && userData["usage_H"] != 1)
         throw(AssertionError("User input not valid (usage_H) - should be either 0 or 1."));
     end
     data.usage_H = userData["usage_H"];
-    # TODO: complete validation
+
+    if(userData["years"] <= 0 )
+        throw(AssertionError("User input not valid (years) - should be greater than 0."));
+    end
     data.p = userData["years"];
+
+    if(userData["shift_edem"] != 0 && userData["shift_edem"] != 1)
+        throw(AssertionError("User input not valid (shift_edem) - should be either 0 or 1."));
+    end
     data.shift_edem = userData["shift_edem"];
+
+    if(userData["shifts"] != 0 && userData["shifts"] != 1)
+        throw(AssertionError("User input not valid (shifts) - should be either 0 or 1."));
+    end
     data.shifts = userData["shifts"];
     # data.edem = userData["edem"];  # TODO map if only one value
     # data.beta_buy = userData["beta_buy"];  # TODO stretch value to Vector
     # data.beta_sell = userData["beta_sell"];  # TODO stretch value to Vector
+    if(userData["WACC"] < 0)
+        throw(AssertionError("User input not valid (WACC) - should be greater or equal to 0."));
+    end
     data.WACC = userData["WACC"];
+
+    # TODO: check if number
+    #if(userData["inflation"] < 0 || userData["inflation"] >= 0)
+    #    throw(AssertionError("User input not valid (WACC) - should be greater or equal to 0."));
+    #end
     data.inflation = userData["inflation"];
     data.beta_buy_LP = userData["beta_buy_LP"];
     data.heat_price = userData["heat_price"];
+
+    if(userData["max_area_PV"] < 0)
+        throw(AssertionError("User input not valid (max_area_PV) - should be greater or equal to 0."));
+    end
     data.max_capa_PV = userData["max_area_PV"];
+
+    if(userData["max_area_WT"] < 0)
+        throw(AssertionError("User input not valid (max_area_WT) - should be greater or equal to 0."));
+    end
     data.max_capa_WT = userData["max_area_WT"];
+
+    if(userData["max_height_WT"] < 0)
+        throw(AssertionError("User input not valid (max_height_WT - should be greater or equal to 0."));
+    end
     data.max_height_WT = userData["max_height_WT"];
 end
 
