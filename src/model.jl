@@ -1,4 +1,4 @@
-using .DEkarPKMU  # take out to use this file outside the module
+#using .DEkarPKMU  # take out to use this file outside the module
 function solve_model(optimizer, data::Data)
     model = Model(optimizer);
 

@@ -226,6 +226,15 @@ mutable struct Data
 
     ellf::Vector{Float64}  # constant
     f_z::Vector{Float64}  # constant
+
+    # newly added
+    usage_WT::Bool  # user input
+    usage_PV::Bool  # user input
+    usage_bat::Bool  # user input
+    usage_H::Bool  # user input
+    shift_edem::Bool  # user input
+    shifts::Int64  # user input
+    max_height_WT::Float64  # user input
     
     Data() = new()
 end
@@ -239,13 +248,33 @@ function JSONToData(json::String)::Data
     return JSON3.read(json, Data);
 end
 
-function initData(inputToSpecify::String)::Data
-    # TODO: validate input
-    
-    println(inputToSpecify);
-    data::Data = Data();
+function initSampleJSON()::String
+    input::String = "{
+            \"usage_WT\" : 0,
+            \"usage_PV\" : 0,
+            \"usage_bat\" : 0,
+            \"usage_H\" : 0,
+            \"years\" : 20,
+            \"shift_edem\" : 0,
+            \"shifts\": 0,
+            \"edem\": 609584.869,
+            \"beta_buy\": 0.15686,
+            \"beta_sell\": 0.05423,
+            \"WACC\": 0.086,
+            \"inflation\": 0.02,
+            \"beta_buy_LP\": 59.25,
+            \"heat_price\": 0.0986,
+            \"max_area_PV\": 10000.0,
+            \"max_area_WT\": 10000.0,
+            \"max_height_WT\" : 15.5
+        }";
+    return input;
+end
 
-    # TODO: add function to add all param
+function initData(inputToSpecify::String)::Data
+    data::Data = Data();
+    ret::Dict{String, Any} = JSON.parse(inputToSpecify);
+    addUserDataToData(data, ret);
 
     data.p = p_const;
     data.re_PV = re_PV_const;
@@ -297,6 +326,27 @@ function initData(inputToSpecify::String)::Data
     data.f_z = f_z_const;
 
     return data;
+end
+
+function addUserDataToData(data::Data, userData::Dict{String, Any})
+    # TODO: validate input
+    data.usage_WT = userData["usage_WT"];
+    data.usage_PV = userData["usage_PV"];
+    data.usage_bat = userData["usage_bat"];
+    data.usage_H = userData["usage_H"];
+    data.p = userData["years"];
+    data.shift_edem = userData["shift_edem"];
+    data.shifts = userData["shifts"];
+    # data.edem = userData["edem"];  # TODO map if only one value
+    # data.beta_buy = userData["beta_buy"];  # TODO stretch value to Vector
+    # data.beta_sell = userData["beta_sell"];  # TODO stretch value to Vector
+    data.WACC = userData["WACC"];
+    data.inflation = userData["inflation"];
+    data.beta_buy_LP = userData["beta_buy_LP"];
+    data.heat_price = userData["heat_price"];
+    data.max_capa_PV = userData["max_area_PV"];
+    data.max_capa_WT = userData["max_area_WT"];
+    data.max_height_WT = userData["max_height_WT"];
 end
 
 function initDataXLSX(file::String)::Data
