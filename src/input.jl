@@ -330,10 +330,23 @@ end
 
 function addUserDataToData(data::Data, userData::Dict{String, Any})
     # TODO: validate input
+    if(userData["usage_WT"] != 0 && userData["usage_WT"] != 1)
+        throw(AssertionError("User input not valid (usage_WT) - should be either 0 or 1."));
+    end
     data.usage_WT = userData["usage_WT"];
+    if(userData["usage_PV"] != 0 && userData["usage_PV"] != 1)
+        throw(AssertionError("User input not valid (usage_PV) - should be either 0 or 1."));
+    end
     data.usage_PV = userData["usage_PV"];
+    if(userData["usage_bat"] != 0 && userData["usage_bat"] != 1)
+        throw(AssertionError("User input not valid (usage_bat) - should be either 0 or 1."));
+    end
     data.usage_bat = userData["usage_bat"];
+    if(userData["usage_H"] != 0 && userData["usage_H"] != 1)
+        throw(AssertionError("User input not valid (usage_H) - should be either 0 or 1."));
+    end
     data.usage_H = userData["usage_H"];
+    # TODO: complete validation
     data.p = userData["years"];
     data.shift_edem = userData["shift_edem"];
     data.shifts = userData["shifts"];
