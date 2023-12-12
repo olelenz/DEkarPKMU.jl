@@ -1,3 +1,10 @@
+### Constants
+
+const INVALID_INPUT_BOOL::String = "User input not valid ({:s}) - should be either 0 or 1.";
+const INVALID_INPUT_G_ZERO::String = "User input not valid ({:s}) - should be greater than 0.";
+const INVALID_INPUT_GEQ_ZERO::String = "User input not valid ({:s}) - should be greater or equal to 0."
+const INVALID_INPUT_TYPE::String = "User input not valid ({:s}) - not of type {:s}."
+
 ### FIXED VALUES
 
 # p_const: periods (fixed to 8760) TODO: why that number
@@ -328,47 +335,56 @@ function initData(inputToSpecify::String)::Data
     return data;
 end
 
+function throwValidationError(field::String, constraint::String, type::DataType, userData::Dict{String, Any})
+    if(!(typeof(userData[field]) <: type))
+        throw(AssertionError(format(INVALID_INPUT_TYPE, field, string(type))));
+    end
+    if(constraint == "BOOL")
+        if(userData[field] != 0 && userData[field] != 1)
+            throw(AssertionError(format(INVALID_INPUT_BOOL, field)));
+        end
+    end
+end
+
 function addUserDataToData(data::Data, userData::Dict{String, Any})
     # TODO: validate input
-    if(userData["usage_WT"] != 0 && userData["usage_WT"] != 1)
-        throw(AssertionError("User input not valid (usage_WT) - should be either 0 or 1."));
-    end
+    throwValidationError("usage_WT", "BOOL", Int64, userData);
     data.usage_WT = userData["usage_WT"];
 
     if(userData["usage_PV"] != 0 && userData["usage_PV"] != 1)
-        throw(AssertionError("User input not valid (usage_PV) - should be either 0 or 1."));
+        throw(AssertionError(format(INVALID_INPUT_BOOL, "usage_PV")));
     end
     data.usage_PV = userData["usage_PV"];
 
     if(userData["usage_bat"] != 0 && userData["usage_bat"] != 1)
-        throw(AssertionError("User input not valid (usage_bat) - should be either 0 or 1."));
+        throw(AssertionError(format(INVALID_INPUT_BOOL, "usage_bat")));
     end
     data.usage_bat = userData["usage_bat"];
 
     if(userData["usage_H"] != 0 && userData["usage_H"] != 1)
-        throw(AssertionError("User input not valid (usage_H) - should be either 0 or 1."));
+        throw(AssertionError(format(INVALID_INPUT_BOOL, "usage_H")));
     end
     data.usage_H = userData["usage_H"];
 
     if(userData["years"] <= 0 )
-        throw(AssertionError("User input not valid (years) - should be greater than 0."));
+        throw(AssertionError(format(INVALID_INPUT_G_ZERO, "years")));
     end
     data.p = userData["years"];
 
     if(userData["shift_edem"] != 0 && userData["shift_edem"] != 1)
-        throw(AssertionError("User input not valid (shift_edem) - should be either 0 or 1."));
+        throw(AssertionError(format(INVALID_INPUT_BOOL, "shift_edem")));
     end
     data.shift_edem = userData["shift_edem"];
 
     if(userData["shifts"] != 0 && userData["shifts"] != 1)
-        throw(AssertionError("User input not valid (shifts) - should be either 0 or 1."));
+        throw(AssertionError(format(INVALID_INPUT_BOOL, "shifts")));
     end
     data.shifts = userData["shifts"];
     # data.edem = userData["edem"];  # TODO map if only one value
     # data.beta_buy = userData["beta_buy"];  # TODO stretch value to Vector
     # data.beta_sell = userData["beta_sell"];  # TODO stretch value to Vector
     if(userData["WACC"] < 0)
-        throw(AssertionError("User input not valid (WACC) - should be greater or equal to 0."));
+        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "WACC")));
     end
     data.WACC = userData["WACC"];
 
@@ -381,17 +397,17 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     data.heat_price = userData["heat_price"];
 
     if(userData["max_area_PV"] < 0)
-        throw(AssertionError("User input not valid (max_area_PV) - should be greater or equal to 0."));
+        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "max_area_PV")));
     end
     data.max_capa_PV = userData["max_area_PV"];
 
     if(userData["max_area_WT"] < 0)
-        throw(AssertionError("User input not valid (max_area_WT) - should be greater or equal to 0."));
+        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "max_area_WT")));
     end
     data.max_capa_WT = userData["max_area_WT"];
 
     if(userData["max_height_WT"] < 0)
-        throw(AssertionError("User input not valid (max_height_WT - should be greater or equal to 0."));
+        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "max_height_WT")));
     end
     data.max_height_WT = userData["max_height_WT"];
 end
