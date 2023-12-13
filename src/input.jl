@@ -343,6 +343,10 @@ function throwValidationError(field::String, constraint::String, type::DataType,
         if(userData[field] != 0 && userData[field] != 1)
             throw(AssertionError(format(INVALID_INPUT_BOOL, field)));
         end
+    elseif(constraint == "G0")
+        throw(AssertionError("TEST"));
+    elseif(constraint == "GEQ0")
+        throw(AssertionError("TEST"));
     end
 end
 
@@ -351,24 +355,16 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     throwValidationError("usage_WT", "BOOL", Int64, userData);
     data.usage_WT = userData["usage_WT"];
 
-    if(userData["usage_PV"] != 0 && userData["usage_PV"] != 1)
-        throw(AssertionError(format(INVALID_INPUT_BOOL, "usage_PV")));
-    end
+    throwValidationError("usage_PV", "BOOL", Int64, userData);
     data.usage_PV = userData["usage_PV"];
 
-    if(userData["usage_bat"] != 0 && userData["usage_bat"] != 1)
-        throw(AssertionError(format(INVALID_INPUT_BOOL, "usage_bat")));
-    end
+    throwValidationError("usage_bat", "BOOL", Int64, userData);
     data.usage_bat = userData["usage_bat"];
 
-    if(userData["usage_H"] != 0 && userData["usage_H"] != 1)
-        throw(AssertionError(format(INVALID_INPUT_BOOL, "usage_H")));
-    end
+    throwValidationError("usage_H", "BOOL", Int64, userData);
     data.usage_H = userData["usage_H"];
 
-    if(userData["years"] <= 0 )
-        throw(AssertionError(format(INVALID_INPUT_G_ZERO, "years")));
-    end
+    throwValidationError("years", "G0", Int64, userData);
     data.p = userData["years"];
 
     if(userData["shift_edem"] != 0 && userData["shift_edem"] != 1)
