@@ -4,6 +4,9 @@ const INVALID_INPUT_BOOL::String = "User input not valid ({:s}) - should be eith
 const INVALID_INPUT_G_ZERO::String = "User input not valid ({:s}) - should be greater than 0.";
 const INVALID_INPUT_GEQ_ZERO::String = "User input not valid ({:s}) - should be greater or equal to 0."
 const INVALID_INPUT_TYPE::String = "User input not valid ({:s}) - not of type {:s}."
+const INPUT_TYPE_BOOL::String = "BOOL";
+const INPUT_TYPE_GREATER_ZERO::String = "G0";
+const INPUT_TYPE_GREATER_EQUAL_ZERO::String = "GEQ0";
 
 ### FIXED VALUES
 
@@ -339,72 +342,67 @@ function throwValidationError(field::String, constraint::String, type::DataType,
     if(!(typeof(userData[field]) <: type))
         throw(AssertionError(format(INVALID_INPUT_TYPE, field, string(type))));
     end
-    if(constraint == "BOOL")
+    if(constraint == INPUT_TYPE_BOOL)
         if(userData[field] != 0 && userData[field] != 1)
             throw(AssertionError(format(INVALID_INPUT_BOOL, field)));
         end
-    elseif(constraint == "G0")
-        throw(AssertionError("TEST"));
-    elseif(constraint == "GEQ0")
-        throw(AssertionError("TEST"));
+    elseif(constraint == INPUT_TYPE_GREATER_ZERO)
+        if(userData[field] <= 0)
+            throw(AssertionError(format(INVALID_INPUT_G_ZERO, field)));
+        end
+    elseif(constraint == INPUT_TYPE_GREATER_EQUAL_ZERO)
+        if(userData[field] < 0)
+            throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, field)));
+        end
     end
 end
 
 function addUserDataToData(data::Data, userData::Dict{String, Any})
     # TODO: validate input
-    throwValidationError("usage_WT", "BOOL", Int64, userData);
+    throwValidationError("usage_WT", INPUT_TYPE_BOOL, Int64, userData);
     data.usage_WT = userData["usage_WT"];
 
-    throwValidationError("usage_PV", "BOOL", Int64, userData);
+    throwValidationError("usage_PV", INPUT_TYPE_BOOL, Int64, userData);
     data.usage_PV = userData["usage_PV"];
 
-    throwValidationError("usage_bat", "BOOL", Int64, userData);
+    throwValidationError("usage_bat", INPUT_TYPE_BOOL, Int64, userData);
     data.usage_bat = userData["usage_bat"];
 
-    throwValidationError("usage_H", "BOOL", Int64, userData);
+    throwValidationError("usage_H", INPUT_TYPE_BOOL, Int64, userData);
     data.usage_H = userData["usage_H"];
 
-    throwValidationError("years", "G0", Int64, userData);
+    throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
     data.p = userData["years"];
 
-    if(userData["shift_edem"] != 0 && userData["shift_edem"] != 1)
-        throw(AssertionError(format(INVALID_INPUT_BOOL, "shift_edem")));
-    end
+    throwValidationError("shift_edem", INPUT_TYPE_BOOL, Int64, userData);
     data.shift_edem = userData["shift_edem"];
 
-    if(userData["shifts"] != 0 && userData["shifts"] != 1)
-        throw(AssertionError(format(INVALID_INPUT_BOOL, "shifts")));
-    end
+    throwValidationError("shifts", INPUT_TYPE_BOOL, Int64, userData);
     data.shifts = userData["shifts"];
+    
     # data.edem = userData["edem"];  # TODO map if only one value
     # data.beta_buy = userData["beta_buy"];  # TODO stretch value to Vector
     # data.beta_sell = userData["beta_sell"];  # TODO stretch value to Vector
-    if(userData["WACC"] < 0)
-        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "WACC")));
-    end
+
+    throwValidationError("WACC", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.WACC = userData["WACC"];
 
-    # TODO: check if number
-    #if(userData["inflation"] < 0 || userData["inflation"] >= 0)
-    #    throw(AssertionError("User input not valid (WACC) - should be greater or equal to 0."));
-    #end
+    throwValidationError("inflation", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
     data.inflation = userData["inflation"];
+
+    throwValidationError("beta_buy_LP", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
     data.beta_buy_LP = userData["beta_buy_LP"];
+
+    throwValidationError("heat_price", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
     data.heat_price = userData["heat_price"];
 
-    if(userData["max_area_PV"] < 0)
-        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "max_area_PV")));
-    end
+    throwValidationError("max_area_PV", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.max_capa_PV = userData["max_area_PV"];
 
-    if(userData["max_area_WT"] < 0)
-        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "max_area_WT")));
-    end
+    throwValidationError("max_area_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.max_capa_WT = userData["max_area_WT"];
 
-    if(userData["max_height_WT"] < 0)
-        throw(AssertionError(format(INVALID_INPUT_GEQ_ZERO, "max_height_WT")));
-    end
+    throwValidationError("max_height_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.max_height_WT = userData["max_height_WT"];
 end
 
