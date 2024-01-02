@@ -26,5 +26,5 @@ Manifest.toml
 # MacOS
 .DS_Store
 
-# IntelliJ
-.idea
+# temporary directories
+temp*/
