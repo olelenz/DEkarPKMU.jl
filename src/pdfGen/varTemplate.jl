@@ -1,1 +1,1 @@
-HEADING:String = "DEkarPKMU Analysis";
+HEADING::String = "DEkarPKMU Analysis";
