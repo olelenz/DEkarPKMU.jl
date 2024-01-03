@@ -20,6 +20,8 @@ function generatePdfTest()
 
     # write to file
     toWrite::String = string(HEADING, "\n\n This is going to be the report!")
+    heading::String = "#include \"../pageSettings.typ\" \n"
+    toWrite = string(heading, toWrite);
     write(file, toWrite);
 
     # close report.typ file
@@ -28,6 +30,6 @@ function generatePdfTest()
     # compile the report.typ file
     fileAsArgument::Vector{String} = [filePath];
     # TODO: make sure typst is installed!! (with the correct version)
-    compileCommand::Cmd = `typst compile $fileAsArgument`;
+    compileCommand::Cmd = `typst compile $fileAsArgument --root="/"`;
     run(compileCommand);
 end
