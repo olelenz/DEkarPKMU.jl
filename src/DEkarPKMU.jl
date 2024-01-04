@@ -6,8 +6,8 @@ export Data, dataToJSON, JSONToData, initData, initDataXLSX, initSampleJSON
 using JuMP, XLSX, JSON3, HiGHS, JSON
 
 include(joinpath(@__DIR__, "input.jl"))
-include(joinpath(@__DIR__, "model.jl")))
-include(joinpath(@__DIR__, "pdfgen.jl")))
+include(joinpath(@__DIR__, "model.jl"))
+include(joinpath(@__DIR__, "pdfgen.jl"))
 
 data::Data = initData(initSampleJSON());
 
