@@ -287,7 +287,6 @@ end
 function initData(inputToSpecify::String)::Data
     data::Data = Data();
     ret::Dict{String, Any} = JSON.parse(inputToSpecify);
-    addUserDataToData(data, ret);
 
     data.p = p_const;
     data.re_PV = re_PV_const;
@@ -338,6 +337,8 @@ function initData(inputToSpecify::String)::Data
     data.ellf = ellf_const;
     data.f_z = f_z_const;
 
+    addUserDataToData(data, ret);
+
     return data;
 end
 
@@ -373,8 +374,9 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     throwValidationError("usage_H", INPUT_TYPE_BOOL, Int64, userData);
     data.usage_H = userData["usage_H"];
 
-    throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
-    data.p = userData["years"];
+    #throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
+    #data.p = userData["years"];
+    #TODO: p != years -> fix
 
     throwValidationError("shift_edem", INPUT_TYPE_BOOL, Int64, userData);
     data.shift_edem = userData["shift_edem"];
