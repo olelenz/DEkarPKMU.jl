@@ -1,4 +1,4 @@
-#let conf(greet, name, pathExampleGraph) = {
+#let conf(greet, name, pathExampleGraph, pathSOCGraph) = {
   set page(
     paper: "a4",
     header: align(
@@ -38,10 +38,19 @@
   )
 
   [#greet : #name]
-  figure(
-    image(
-      pathExampleGraph,
-      width: 57%,
+  grid(
+    columns: (1fr, 1fr),
+    figure(
+      image(
+        pathExampleGraph,
+        width: 90%,
+      )
+    ),
+    figure(
+      image(
+        pathSOCGraph,
+        width: 90%,
+      )
     )
   )
 
