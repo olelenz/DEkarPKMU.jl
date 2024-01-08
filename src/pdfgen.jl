@@ -4,7 +4,7 @@ using Plots
 include("./pdfGen/varTemplate.jl");
 function generatePdfTest()
     #data::Data = initDataXLSX("/Users/ole/Documents/Uni/WS2324/POM/master_thesis/230717_Energiesystemmodellierung_Input_Output.xlsx");
-    data::Data = initData(initSampleJSON());
+    data::Data = initDataFromString(initSampleJSON());
     model = solve_model_fast(HiGHS.Optimizer, data);
     pdfPath::String = generatePdf(model);
     run(`open $pdfPath`);
