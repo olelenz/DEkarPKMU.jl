@@ -1,14 +1,20 @@
-using Genie, Genie.Renderer, Genie.Renderer.Html, Genie.Renderer.Json, Genie.Requests
+using Genie, Genie.Renderer.Json, Genie.Requests
 
-route("/hello.json") do
-  json("Hello World")
+function startBackend()
+    println("hello backend");
+    route("/hello.json") do
+        json("Hello World");
+    end
+
+    route("/processModelInput", method = POST) do
+        @show jsonpayload()
+        @show rawpayload()
+        if(jsonpayload === nothing)
+            println("TODO: throw error here");
+        end
+        data::Data = initData(jsonpayload());
+        println(data.WACC);
+    end
+
+    up(8001, async = false);
 end
-
-route("/processModelInput", method = POST) do
-  @show jsonpayload()
-  @show rawpayload()
-
-  json("Hello $(jsonpayload()["usage_WT"])")
-end
-
-up(8001, async = false)

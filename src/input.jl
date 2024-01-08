@@ -284,9 +284,13 @@ function initSampleJSON()::String
     return input;
 end
 
-function initData(inputToSpecify::String)::Data
+function initDataFromString(stringInput::String)::Data
+    return initData(JSON.parse(stringInput));
+end
+
+function initData(inputDict::Dict{String, Any})::Data
     data::Data = Data();
-    ret::Dict{String, Any} = JSON.parse(inputToSpecify);
+    ret::Dict{String, Any} = inputDict;;
 
     data.p = p_const;
     data.re_PV = re_PV_const;
