@@ -2,13 +2,12 @@ using Formatting
 using Plots
 
 include("./pdfGen/varTemplate.jl");
-function generatePdfTest()::String
+function generatePdfTest()
     #data::Data = initDataXLSX("/Users/ole/Documents/Uni/WS2324/POM/master_thesis/230717_Energiesystemmodellierung_Input_Output.xlsx");
     data::Data = initData(initSampleJSON());
     model = solve_model_fast(HiGHS.Optimizer, data);
     pdfPath::String = generatePdf(model);
-    pathArgument::Vector{String} = [pdfPath];
-    #run(`open $pathArgument`);
+    run(`open $pdfPath`);
 end
 function generatePdf(model::Model)::String
     dir::String = "./src/pdfGen";
