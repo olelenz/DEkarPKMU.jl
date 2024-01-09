@@ -18,6 +18,7 @@ function modelTest()
 end
 
 function __init__()
+    println(@__DIR__);
     startBackend()
 end
 

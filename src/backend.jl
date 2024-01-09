@@ -13,6 +13,8 @@ function startBackend()
             println("TODO: throw error here");
         end
         data::Data = initData(jsonpayload());
+        model = solve_model_fast(HiGHS.Optimizer, data);
+        generatePdf(model);
         println(data.WACC);
     end
 
