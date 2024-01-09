@@ -10,20 +10,24 @@ function generatePdfTest()
     run(`open $pdfPath`);
 end
 function generatePdf(model::Model)::String
-    dir::String = "./src/pdfGen";
+    #@__DIR__
+    dir::String = joinpath(@__DIR__, "pdfGen/")    
     while isdir(dir)
         # create random id
         id::Int64 = rand(0:9223372036854775807);
 
         # create temp directory
-        dir = string("./src/pdfGen/temp_", id);
+        dir = string(joinpath(@__DIR__, "pdfGen/temp_"), id);
     end
+    println(@__DIR__);
+    println(joinpath(@__DIR__, "pdfGen/temp_"))
+    println(dir);
     mkdir(dir);
     graphNames::Vector{String} = ["simplePlot.png", "SOC.png"];
     generateGraphs(dir, graphNames, model);
 
     # create .typ file
-    filePath::String = string(dir, "/report.typ");
+    filePath::String = joinpath(dir, "report.typ");
     touch(filePath);
 
     # TODO: handle IO exceptions 
@@ -32,7 +36,7 @@ function generatePdf(model::Model)::String
 
     # write to file
     # adjust paths to graphs to comply with typst requirements
-    graphNames = map(path::String -> string("\"", ".", dir[13:end], "/", path, "\""), graphNames);
+    graphNames = map(path::String -> string("\"", joinpath(dir, path), "\""), graphNames);
     arguments::Vector{String} = ["[hello]", "[Ole]", graphNames[1], graphNames[2]];
     argumentString::String = join(arguments, ", ");
     toWrite::String = format("#import \"../pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
