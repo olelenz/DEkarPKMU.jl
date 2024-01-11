@@ -5,24 +5,17 @@ include("./pdfGen/varTemplate.jl");
 function generatePdfTest()
     #data::Data = initDataXLSX("/Users/ole/Documents/Uni/WS2324/POM/master_thesis/230717_Energiesystemmodellierung_Input_Output.xlsx");
     data::Data = initDataFromString(initSampleJSON());
+    id::Int64 = rand(0:9223372036854775807);
     model = solve_model_fast(HiGHS.Optimizer, data);
-    pdfPath::String = generatePdf(model);
+    pdfPath::String = generatePdf(model, id);
     run(`open $pdfPath`);
 end
-function generatePdf(model::Model)::String
-    #@__DIR__
-    dir::String = joinpath(@__DIR__, "pdfGen/")    
-    while isdir(dir)
-        # create random id
-        id::Int64 = rand(0:9223372036854775807);
-
-        # create temp directory
-        dir = string(joinpath(@__DIR__, "pdfGen/temp_"), id);
+function generatePdf(model::Model, id::Int64)::String
+    dir::String = string(joinpath(@__DIR__, "pdfGen/temp_"), id);
+    if(isdir(dir))
+        rm(dir, recursive=true);
     end
-    println(@__DIR__);
-    println(joinpath(@__DIR__, "pdfGen/temp_"))
-    println(dir);
-    mkdir(dir);
+    mkdir(dir)
     graphNames::Vector{String} = ["simplePlot.png", "SOC.png"];
     generateGraphs(dir, graphNames, model);
 
@@ -37,7 +30,7 @@ function generatePdf(model::Model)::String
     # write to file
     # adjust paths to graphs to comply with typst requirements
     graphNames = map(path::String -> string("\"", joinpath(dir, path), "\""), graphNames);
-    arguments::Vector{String} = ["[hello]", "[Ole]", graphNames[1], graphNames[2]];
+    arguments::Vector{String} = ["[hello]", "[Ole]", graphNames[2], graphNames[2], graphNames[2]];
     argumentString::String = join(arguments, ", ");
     toWrite::String = format("#import \"../pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
     write(file, toWrite);

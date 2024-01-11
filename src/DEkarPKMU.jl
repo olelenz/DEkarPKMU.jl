@@ -5,8 +5,11 @@ export Data, dataToJSON, JSONToData, initData, initDataXLSX, initSampleJSON
 export generatePdfTest, generatePdf, testG
 export startBackend
 
-using JuMP, XLSX, JSON3, HiGHS, JSON, Pkg, Genie
-#Pkg.activate(".");
+using Pkg;
+Pkg.activate("..");
+
+using JuMP, XLSX, JSON3, HiGHS, JSON, Pkg, DataStructures
+using Genie, Genie.Renderer.Json, Genie.Requests, HTTP
 
 include(joinpath(@__DIR__, "input.jl"));
 include(joinpath(@__DIR__, "model.jl"));
@@ -18,7 +21,6 @@ function modelTest()
 end
 
 function __init__()
-    println(@__DIR__);
     startBackend()
 end
 
