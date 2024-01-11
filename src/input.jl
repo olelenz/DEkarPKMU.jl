@@ -158,6 +158,7 @@ const ellf_const::Vector{Float64} = [0.0, 0.2, 0.6, 1.0];
 const f_z_const::Vector{Float64} = [0.0, 0.46, 0.6, 0.58];
 
 mutable struct Data
+    id::Int64  # the id for the current request
     p::Int64  # constant / user input (implemented later)
     edem::Vector{Real}  # user input or calculated depending on overall demand and amount of shifts
     beta_buy::Vector{Float64}  # user input TODO: only one value
@@ -263,6 +264,7 @@ end
 
 function initSampleJSON()::String
     input::String = "{
+            \"id\" : 0,
             \"usage_WT\" : 0,
             \"usage_PV\" : 0,
             \"usage_bat\" : 0,
@@ -366,6 +368,9 @@ function throwValidationError(field::String, constraint::String, type::DataType,
 end
 
 function addUserDataToData(data::Data, userData::Dict{String, Any})
+    throwValidationError("id", INPUT_TYPE_GREATER_EQUAL_ZERO, Int64, userData);
+    data.id = userData["id"];
+
     throwValidationError("usage_WT", INPUT_TYPE_BOOL, Int64, userData);
     data.usage_WT = userData["usage_WT"];
 
