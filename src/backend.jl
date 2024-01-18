@@ -127,8 +127,15 @@ function startBackend()
         pathToImg1::String = joinpath(basePath, "SOC.png");
         pathToImg2::String = joinpath(basePath, "SOC.png");
         pathToImg3::String = joinpath(basePath, "SOC.png");
+        exampleUserInfo::String = "GESAMT NPV";
+        # TODO: add text output data
         
-        return JSON.json(Dict(:pathToPdf => pathToPdf, :pathToImg1 => pathToImg1, :pathToImg2 => pathToImg2, :pathToImg3 => pathToImg3));
+        return JSON.json(Dict(
+            :pathToPdf => pathToPdf, 
+            :pathToImg1 => pathToImg1, 
+            :pathToImg2 => pathToImg2, 
+            :pathToImg3 => pathToImg3, 
+            :exampleUserInfo => exampleUserInfo));
     end
 
     route("/processModelInput", method = POST) do
@@ -152,12 +159,19 @@ function startBackend()
             return response;
         end
 
+        try
+            validateUserData(jsonpayload());
+        catch e
+            response.status = 400;
+            response.body = format("Input data not correct: {:s}", e.msg);
+            return response;
+        end
+
         task::Task = Task(startJob);
         push!(currentJobsSet, id);
         enqueue!(processingQueue, id);
         taskList[id] = task;
 
-        # TODO: verify data
         taskData[id] = jsonpayload();
 
         @async begin

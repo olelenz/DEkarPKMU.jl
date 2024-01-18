@@ -367,66 +367,55 @@ function throwValidationError(field::String, constraint::String, type::DataType,
     end
 end
 
-function addUserDataToData(data::Data, userData::Dict{String, Any})
+function validateUserData(userData::Dict{String, Any})
     throwValidationError("id", INPUT_TYPE_GREATER_EQUAL_ZERO, Int64, userData);
-    data.id = userData["id"];
-
     throwValidationError("usage_WT", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_WT = userData["usage_WT"];
-
     throwValidationError("usage_PV", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_PV = userData["usage_PV"];
-
     throwValidationError("usage_bat", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_bat = userData["usage_bat"];
-
     throwValidationError("usage_H", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_H = userData["usage_H"];
+    throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
+    throwValidationError("shift_edem", INPUT_TYPE_BOOL, Int64, userData);
+    throwValidationError("shifts", INPUT_TYPE_BOOL, Int64, userData);
+    typeEdem::DataType = typeof(userData["edem"]);
+    if(!(typeEdem <: Real) && !(typeEdem <: Vector{Real}))
+        throw(AssertionError(format(INVALID_INPUT_TYPE, "edem", "Float64 or Vector{Float64}", string(typeof(userData["edem"])))));
+    end
+    throwValidationError("beta_buy", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("beta_sell", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("WACC", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("inflation", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);  # TODO: really geq 0?
+    throwValidationError("beta_buy_LP", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);  # TODO: really geq 0?
+    throwValidationError("heat_price", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);  # TODO: really geq 0?
+    throwValidationError("max_area_PV", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("max_area_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("max_height_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+end
 
-    #throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
+function addUserDataToData(data::Data, userData::Dict{String, Any})
+    validateUserData(userData);
+    data.id = userData["id"];
+    data.usage_WT = userData["usage_WT"];
+    data.usage_PV = userData["usage_PV"];
+    data.usage_bat = userData["usage_bat"];
+    data.usage_H = userData["usage_H"];
     #data.p = userData["years"];
     #TODO: p != years -> fix
-
-    throwValidationError("shift_edem", INPUT_TYPE_BOOL, Int64, userData);
     data.shift_edem = userData["shift_edem"];
-
-    throwValidationError("shifts", INPUT_TYPE_BOOL, Int64, userData);
     data.shifts = userData["shifts"];
-    
     typeEdem::DataType = typeof(userData["edem"]);
     if(typeEdem == Float64)
         data.edem = predictEdem(userData["edem"]);
     elseif (typeEdem == Vector{Float64})
         data.edem = userData["edem"];  # TODO: we need to know what happened (server-side)
-    else
-        throw(AssertionError(format(INVALID_INPUT_TYPE, "edem", "Float64 or Vector{Float64}", string(typeof(userData["edem"])))));
     end
-
-    throwValidationError("beta_buy", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.beta_buy = stretchValueToVector(data.p, userData["beta_buy"]);
-
-    throwValidationError("beta_sell", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.beta_sell = stretchValueToVector(data.p, userData["beta_sell"]);
-
-    throwValidationError("WACC", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.WACC = userData["WACC"];
-
-    throwValidationError("inflation", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
     data.inflation = userData["inflation"];
-
-    throwValidationError("beta_buy_LP", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
     data.beta_buy_LP = userData["beta_buy_LP"];
-
-    throwValidationError("heat_price", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
     data.heat_price = userData["heat_price"];
-
-    throwValidationError("max_area_PV", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.max_capa_PV = userData["max_area_PV"];
-
-    throwValidationError("max_area_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.max_capa_WT = userData["max_area_WT"];
-
-    throwValidationError("max_height_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
     data.max_height_WT = userData["max_height_WT"];
 end
 
