@@ -7,6 +7,7 @@ export startBackend
 
 using Pkg;
 Pkg.activate("..");
+Pkg.instantiate();
 
 using JuMP, XLSX, JSON3, HiGHS, JSON, Pkg, DataStructures
 using Genie, Genie.Renderer.Json, Genie.Requests, HTTP
