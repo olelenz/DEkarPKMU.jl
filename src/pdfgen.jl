@@ -16,7 +16,7 @@ function generatePdf(model::Model, id::Int64)::String
         rm(dir, recursive=true);
     end
     mkdir(dir)
-    graphNames::Vector{String} = ["simplePlot.png", "SOC.png"];
+    graphNames::Vector{String} = ["Eigenvebrauch.png", "Autarkiegrad.png", "SOC.png"];
     generateGraphs(dir, graphNames, model);
 
     # create .typ file
@@ -30,7 +30,7 @@ function generatePdf(model::Model, id::Int64)::String
     # write to file
     # adjust paths to graphs to comply with typst requirements
     graphNames = map(path::String -> string("\"", joinpath(dir, path), "\""), graphNames);
-    arguments::Vector{String} = ["[hello]", "[Ole]", graphNames[2], graphNames[2], graphNames[2]];
+    arguments::Vector{String} = ["[hello]", "[Ole]", graphNames[1], graphNames[2], graphNames[3]];
     argumentString::String = join(arguments, ", ");
     toWrite::String = format("#import \"../pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
     write(file, toWrite);
@@ -48,14 +48,33 @@ return string(filePath[1:end-3], "pdf");
 end
 
 function generateGraphs(dir::String, names::Vector{String}, model::Model)
-    # sample plot
-    samplePlot::Plots.Plot{Plots.GRBackend} = plot(rand(10), dpi=1000);
-    samplePath::String = string(dir, "/", names[1]);
-    savefig(samplePlot, samplePath);
+    # Eigenverbrauch pie chart
+    labelsEigenverbrauch::Vector{String} = ["verkaufter Strom", "eigens genutzter Strom"];
+
+    total_demand::Float64 = value.(model[:Total_demand]);
+    total_sell::Float64 = value.(model[:Total_sell]);
+    sum_energy_consumption::Float64 = total_demand + total_sell;
+    valuesEigenverbrauch::Vector{Float64} = [total_sell/sum_energy_consumption, total_demand/sum_energy_consumption];
+
+    eigenverbrauchPlot::Plots.Plot{Plots.GRBackend} = pie(labelsEigenverbrauch, valuesEigenverbrauch, dpi = 1000, title = "Eigenverbrauch");
+    eigenverbrauchPath::String = joinpath(dir, names[1]);
+    savefig(eigenverbrauchPlot, eigenverbrauchPath);
+
+    # Autarkiegrad
+    labelsAutarkiegrad::Vector{String} = ["eingekaufter Strom", "generierter Strom"];
+
+    total_buy::Float64 = value.(model[:Total_buy]);
+    total_gen::Float64 = value.(model[:Total_PV_GEN]) + value.(model[:Total_WT_GEN]);
+    sum_energy_input::Float64 = total_buy + total_gen;
+    valuesAutarkiegrad::Vector{Float64} = [total_buy/sum_energy_input, total_gen/sum_energy_input];
+
+    autarkiegradPlot::Plots.Plot{Plots.GRBackend} = pie(labelsAutarkiegrad, valuesAutarkiegrad, dpi = 1000, title = "Autarkiegrad");
+    autarkiegradPath::String = joinpath(dir, names[2]);
+    savefig(autarkiegradPlot, autarkiegradPath);
 
     # plot SOC
     socPlot::Plots.Plot{Plots.GRBackend} = plot(value.(model[:SOC]), dpi=1000);
-    socPath::String = string(dir, "/", names[2]);
+    socPath::String = string(dir, "/", names[3]);
     savefig(socPlot, socPath);
 end
 

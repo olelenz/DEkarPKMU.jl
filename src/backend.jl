@@ -124,8 +124,8 @@ function startBackend()
         
         basePath::String = joinpath(@__DIR__, string("pdfGen/temp_", id));
         pathToPdf::String = joinpath(basePath, "report.pdf");
-        pathToImg1::String = joinpath(basePath, "SOC.png");
-        pathToImg2::String = joinpath(basePath, "SOC.png");
+        pathToImg1::String = joinpath(basePath, "Eigenverbrauch.png");
+        pathToImg2::String = joinpath(basePath, "Autarkiegrad.png");
         pathToImg3::String = joinpath(basePath, "SOC.png");
         exampleUserInfo::String = "GESAMT NPV";
         # TODO: add text output data
