@@ -30,7 +30,7 @@ function generatePdf(model::Model, id::Int64)::String
     # write to file
     # adjust paths to graphs to comply with typst requirements
     graphNames = map(path::String -> string("\"", joinpath(dir, path), "\""), graphNames);
-    arguments::Vector{String} = ["[hello]", "[Ole]", graphNames[1], graphNames[2], graphNames[3]];
+    arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3]];
     argumentString::String = join(arguments, ", ");
     toWrite::String = format("#import \"../pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
     write(file, toWrite);
