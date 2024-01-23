@@ -10,7 +10,7 @@ Pkg.activate("..");
 #Pkg.instantiate();
 
 using JuMP, XLSX, JSON3, HiGHS, JSON, Pkg, DataStructures
-using Genie, Genie.Renderer.Json, Genie.Requests, HTTP
+using Genie, Genie.Renderer.Json, Genie.Requests, HTTP, Formatting, Printf, Statistics
 
 include(joinpath(@__DIR__, "input.jl"));
 include(joinpath(@__DIR__, "model.jl"));

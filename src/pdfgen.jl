@@ -10,7 +10,9 @@ function generatePdfTest()
     pdfPath::String = generatePdf(model, id);
     run(`open $pdfPath`);
 end
-function generatePdf(model::Model, id::Int64)::String
+
+
+function generatePdf(model::Model, id::Int64)
     dir::String = string(joinpath(@__DIR__, "pdfGen/temp_"), id);
     if(isdir(dir))
         rm(dir, recursive=true);
@@ -30,7 +32,8 @@ function generatePdf(model::Model, id::Int64)::String
     # write to file
     # adjust paths to graphs to comply with typst requirements
     graphNames = map(path::String -> string("\"", joinpath(dir, path), "\""), graphNames);
-    arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3]];
+    outputData::String = buildTypstOutputDataDictionary(model, dir);
+    arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3], outputData];
     argumentString::String = join(arguments, ", ");
     toWrite::String = format("#import \"../pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
     write(file, toWrite);
@@ -43,8 +46,36 @@ function generatePdf(model::Model, id::Int64)::String
     # TODO: make sure typst is installed!! (with the correct version)
     compileCommand::Cmd = `typst compile $fileAsArgument --root="/"`;
     run(compileCommand);
+end
 
-return string(filePath[1:end-3], "pdf");
+function generateKennzahlen(model::Model)::Dict{String, Number}
+    out::Dict{String, Number} = Dict{String, Number}();
+    out["LeistungElektrolyse"] = sum(value.(model[:EL_output]));
+    out["LeistungBrennstoffzelle"] = sum(value.(model[:FC_output]));
+    out["Wasserstofftankfuellstand"] = mean(value.(model[:H]));
+    out["VerkaufterStrom"] = value.(model[:Total_sell]);
+    out["EingekaufterStrom"] = value.(model[:Total_buy]);
+    out["BatterieInput"] = mean(value.(model[:R_Bat_in]));
+    out["VerwendeteEnergie"] = value.(model[:Total_demand]);
+    return out;
+end
+
+function buildTypstOutputDataDictionary(model::Model, dir::String)::String
+    data::Dict{String, Number} = generateKennzahlen(model);
+    write(joinpath(dir, "Kennzahlen.txt"), JSON3.write(data))
+    out::String = "(";
+    out = string(out, "LeistungElektrolyse: ", formatNum(data["LeistungElektrolyse"]));
+    out = string(out, ",LeistungBrennstoffzelle: ", formatNum(data["LeistungBrennstoffzelle"]));
+    out = string(out, ",Wasserstofftankfuellstand: ", formatNum(data["Wasserstofftankfuellstand"]));
+    out = string(out, ",VerkaufterStrom: ", formatNum(data["VerkaufterStrom"]));
+    out = string(out, ",EingekaufterStrom: ", formatNum(data["EingekaufterStrom"]));
+    out = string(out, ",BatterieInput: ", formatNum(data["BatterieInput"]));
+    out = string(out, ",VerwendeteEnergie: ", formatNum(data["VerwendeteEnergie"]));
+
+    return string(out, ")");
+end
+function formatNum(x,fmt="%15.2f")::String
+    return string("\"", Printf.format(Printf.Format(fmt), x), "\"")
 end
 
 function generateGraphs(dir::String, names::Vector{String}, model::Model)

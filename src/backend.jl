@@ -127,15 +127,21 @@ function startBackend()
         pathToImg1::String = joinpath(basePath, "Eigenverbrauch.png");
         pathToImg2::String = joinpath(basePath, "Autarkiegrad.png");
         pathToImg3::String = joinpath(basePath, "SOC.png");
-        exampleUserInfo::String = "GESAMT NPV";
         # TODO: add text output data
+        returnDictionary= Dict(
+            "pathToPdf" => pathToPdf, 
+            "pathToImg1" => pathToImg1, 
+            "pathToImg2" => pathToImg2, 
+            "pathToImg3" => pathToImg3);
+
+        kennzahlenDictionary::Dict{String, Number} = JSON3.read(read(joinpath(basePath, "Kennzahlen.txt"), String), Dict{String, Number});
+        kennzahlenDictionaryString::Dict{String, String} = Dict{String, String}();
+        for (key, value) in kennzahlenDictionary
+            kennzahlenDictionaryString[key] = string(Printf.format(Printf.Format("%.2f"), value));
+        end
+        returnDictionary = merge(returnDictionary, kennzahlenDictionaryString);
         
-        return JSON.json(Dict(
-            :pathToPdf => pathToPdf, 
-            :pathToImg1 => pathToImg1, 
-            :pathToImg2 => pathToImg2, 
-            :pathToImg3 => pathToImg3, 
-            :exampleUserInfo => exampleUserInfo));
+        return JSON.json(returnDictionary);
     end
 
     route("/processModelInput", method = POST) do

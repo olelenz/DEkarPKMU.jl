@@ -1,4 +1,4 @@
-#let conf(id, name, pathEigenverbrauch, pathAutarkiegrad, pathDuplicate) = {
+#let conf(id, name, pathEigenverbrauch, pathAutarkiegrad, pathDuplicate, outputData) = {
   set page(
     paper: "a4",
     header: [
@@ -52,29 +52,39 @@
   text(size: 13pt, weight: "bold")[Kennzahlen:]
   linebreak()
   set terms(indent: 7pt)
+  let num(var) = {
+    [#align(right, [#outputData.at(var)#h(0.2cm)])]
+  }
   grid(
-    columns: (4cm, 10cm),
-    rows: (15pt, 15pt),
+    columns: (5cm, 5cm, 2cm),
+    rows: (15pt, 15pt, 15pt),
     [Leistung Elektrolyse:],
-    [#name],
+    [#num("LeistungElektrolyse")],
+    [kW],
     [Leistung Brennstoffzelle:],
-    [#name],
+    [#num("LeistungBrennstoffzelle")],
+    [kW],
     [Wasserstofftankfüllstand:],
-    [#name],
+    [#num("Wasserstofftankfuellstand")],
+    [avg unit?],
     [Verkaufter Strom:],
-    [#name],
+    [#num("VerkaufterStrom")],
+    [kW],
     [Eingekaufter Strom:],
-    [#name],
+    [#num("EingekaufterStrom")],
+    [kW],
     [Batterie Input:],
-    [#name],
+    [#num("BatterieInput")],
+    [kWh],
     [Verwendete Energie:],
-    [#name],
+    [#num("VerwendeteEnergie")],
+    [kW],
 
   )
   
   
   grid(
-    columns: (1fr, 1fr, 1fr),
+    columns: (1fr, 1fr),
     figure(
       image(
         pathEigenverbrauch,
@@ -86,12 +96,13 @@
         pathAutarkiegrad,
         width: 90%,
       )
-    ),
-    figure(
-      image(
-        pathDuplicate,
-        width: 90%,
-      )
+    )
+  )
+
+  figure(
+    image(
+      pathDuplicate,
+      width: 90%,
     )
   )
 
