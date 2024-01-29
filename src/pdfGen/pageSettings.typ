@@ -44,8 +44,7 @@
   )
 
   align(center, text(17pt)[
-    *A fluid dynamic model
-    for glacier flow*
+    *DEkarPKMU Reporting*
   ])
   text(size: 13pt, weight: "bold")[Input:]
   linebreak()
