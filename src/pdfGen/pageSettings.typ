@@ -78,6 +78,9 @@
     [Verwendete Energie:],
     [#num("VerwendeteEnergie")],
     [kW],
+    [Kapitalwert:],
+    [#num("NPV")],
+    [€],
 
   )
   

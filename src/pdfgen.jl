@@ -57,6 +57,7 @@ function generateKennzahlen(model::Model)::Dict{String, Number}
     out["EingekaufterStrom"] = value.(model[:Total_buy]);
     out["BatterieInput"] = mean(value.(model[:R_Bat_in]));
     out["VerwendeteEnergie"] = value.(model[:Total_demand]);
+    out["NPV"] = value.(model[:NPV_annual_costs]) * -1;
     return out;
 end
 
@@ -71,6 +72,7 @@ function buildTypstOutputDataDictionary(model::Model, dir::String)::String
     out = string(out, ",EingekaufterStrom: ", formatNum(data["EingekaufterStrom"]));
     out = string(out, ",BatterieInput: ", formatNum(data["BatterieInput"]));
     out = string(out, ",VerwendeteEnergie: ", formatNum(data["VerwendeteEnergie"]));
+    out = string(out, ",NPV: ", formatNum(data["NPV"]));
 
     return string(out, ")");
 end
