@@ -1,6 +1,6 @@
 module DEkarPKMU
 
-export solve_model, solve_model_fast, solve_model_test
+export solve_model, solve_model_fast, solve_model_var
 export Data, dataToJSON, JSONToData, initData, initDataXLSX, initSampleJSON, validateUserData
 export generatePdfTest, generatePdf, testG
 export startBackend
