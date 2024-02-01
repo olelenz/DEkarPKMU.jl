@@ -13,7 +13,7 @@ end
 
 
 function generatePdf(model::Model, id::Int64)
-    dir::String = string(joinpath(@__DIR__, "pdfGen/temp_"), id);
+    dir::String = string(joinpath(@__DIR__, joinpath("pdfGen","temp_")), id);
     if(isdir(dir))
         rm(dir, recursive=true);
     end
@@ -35,7 +35,7 @@ function generatePdf(model::Model, id::Int64)
     outputData::String = buildTypstOutputDataDictionary(model, dir);
     arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3], outputData];
     argumentString::String = join(arguments, ", ");
-    toWrite::String = format("#import \"../pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
+    toWrite::String = format("#import \"..\\pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
     write(file, toWrite);
 
     # close report.typ file
@@ -44,7 +44,7 @@ function generatePdf(model::Model, id::Int64)
     # compile the report.typ file
     fileAsArgument::Vector{String} = [filePath];
     # TODO: make sure typst is installed!! (with the correct version)
-    compileCommand::Cmd = `typst compile $fileAsArgument --root="/"`;
+    compileCommand::Cmd = `typst compile $fileAsArgument --root="\\"`;
     run(compileCommand);
 end
 
