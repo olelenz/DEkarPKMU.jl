@@ -31,7 +31,7 @@ function generatePdf(model::Model, id::Int64)
 
     # write to file
     # adjust paths to graphs to comply with typst requirements
-    graphNames = map(path::String -> string("\"", joinpath(dir, path), "\""), graphNames);
+    graphNames = map(path::String -> string("\"", replace(joinpath(dir, path), "\\"=>"\\\\"), "\""), graphNames);
     outputData::String = buildTypstOutputDataDictionary(model, dir);
     arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3], outputData];
     argumentString::String = join(arguments, ", ");
@@ -42,9 +42,20 @@ function generatePdf(model::Model, id::Int64)
     close(file);
 
     # compile the report.typ file
+    filePath = replace(filePath, "\\" => "\\\\");
     fileAsArgument::Vector{String} = [filePath];
     # TODO: make sure typst is installed!! (with the correct version)
-    compileCommand::Cmd = `typst compile $fileAsArgument --root="\\"`;
+    command0 = "compile";
+    # On Windows:
+    command1 = raw"C:\Users\simulating\AppData\Local\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe";
+    command2 = "--root=\\";
+    compileCommand::Cmd = `cmd /c $command1 $command0 $fileAsArgument $command2`;
+
+    # On Mac:
+    command3 = "typst";
+    command4 = "--root=\\";
+    compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument $command4`;
+    
     run(compileCommand);
 end
 
@@ -107,7 +118,7 @@ function generateGraphs(dir::String, names::Vector{String}, model::Model)
 
     # plot SOC
     socPlot::Plots.Plot{Plots.GRBackend} = plot(value.(model[:SOC]), dpi=1000);
-    socPath::String = string(dir, "/", names[3]);
+    socPath::String = joinpath(dir, names[3]);
     savefig(socPlot, socPath);
 end
 

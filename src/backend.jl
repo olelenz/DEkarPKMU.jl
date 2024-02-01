@@ -180,12 +180,12 @@ function startBackend()
 
         taskData[id] = JSON.parse(rawpayload());
 
-       # @async begin
-           # sleep(1);
-           # schedule(task);
-           # yield();
-       # end
-        startJob();
+        @async begin
+            sleep(1);
+            schedule(task);
+            yield();
+        end
+        #startJob();
         response.status = 202;
         response.body = format("Started job {:s}.", id);
         return response;
