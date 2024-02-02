@@ -428,7 +428,7 @@ function predictEdem(total::Float64)::Vector{Float64}
     return outVec;
 end
 
-function stretchValueToVector(size::Int64, value::Float64)::Vector{Float64}
+function stretchValueToVector(size::Int64, value::Number)::Vector{Float64}
     return fill(value, size);
 end
 
