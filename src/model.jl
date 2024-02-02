@@ -411,7 +411,7 @@ function solve_model_fast(optimizer, data::Data)
     return model;
 end
 
-function solve_model_var(optimizer, data::Data, flags::Dict{String, Bool})
+function solve_model_var(optimizer, data::Data)
     
     model = Model(optimizer);
 
@@ -483,7 +483,7 @@ function solve_model_var(optimizer, data::Data, flags::Dict{String, Bool})
     @objective(model, Min, EC); 
 
     # PV
-    if(flags["pv"])
+    if(data.usage_PV)
         @constraint(model, Invest_PV == data.capacity_cost_PV2 * c_PV);
         @constraint(model, c_PV >= 30);
 
@@ -491,14 +491,14 @@ function solve_model_var(optimizer, data::Data, flags::Dict{String, Bool})
     end
     
     # WT
-    if(flags["wind"])
+    if(data.usage_WT)
         @constraint(model, Invest_WT == data.capacity_cost_WT2 * c_WT);
         @constraint(model, c_WT >= 100);
         @constraint(model, OPEX_WT == c_WT*data.OPEX_WT_fix/8760*data.p + sum(data.re_WT[x]*c_WT*data.OPEX_WT_var for x=1:data.p))
     end
 
     # H
-    if(flags["h2"])
+    if(data.usage_H)
         @constraint(model, c_H <= 100000)
 
         @constraint(model, [p=1:data.p], data.h_min*c_H <= H[p]) ;                          # hydrogen tank capacity  
@@ -511,7 +511,7 @@ function solve_model_var(optimizer, data::Data, flags::Dict{String, Bool})
     end
     
     # bat
-    if(flags["bat"])
+    if(data.usage_bat)
         @constraint(model, c_bat <= 100000)
         @constraint(model, Invest_bat == data.capacity_cost_bat3*c_bat);
         @constraint(model, c_bat >= 10);

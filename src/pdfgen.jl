@@ -7,12 +7,11 @@ function generatePdfTest()
     data::Data = initDataFromString(initSampleJSON());
     id::Int64 = rand(0:9223372036854775807);
     model = solve_model_fast(HiGHS.Optimizer, data);
-    pdfPath::String = generatePdf(model, id);
-    run(`open $pdfPath`);
+    generatePdf(model, id, data);
 end
 
 
-function generatePdf(model::Model, id::Int64)
+function generatePdf(model::Model, id::Int64, data::Data)
     dir::String = string(joinpath(@__DIR__, "pdfGen/temp_"), id);
     if(isdir(dir))
         rm(dir, recursive=true);
@@ -32,8 +31,9 @@ function generatePdf(model::Model, id::Int64)
     # write to file
     # adjust paths to graphs to comply with typst requirements
     graphNames = map(path::String -> string("\"", joinpath(dir, path), "\""), graphNames);
+    inputData::String = buildTypstInputDataDictionary(data);
     outputData::String = buildTypstOutputDataDictionary(model, dir);
-    arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3], outputData];
+    arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3], inputData, outputData];
     argumentString::String = join(arguments, ", ");
     toWrite::String = format("#import \"../pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
     write(file, toWrite);
@@ -57,8 +57,33 @@ function generateKennzahlen(model::Model)::Dict{String, Number}
     out["EingekaufterStrom"] = value.(model[:Total_buy]);
     out["BatterieInput"] = mean(value.(model[:R_Bat_in]));
     out["VerwendeteEnergie"] = value.(model[:Total_demand]);
-    out["NPV"] = value.(model[:NPV_annual_costs]) * -1;
+    out["NPV"] = value.(model[:NPV_annual_costs]);
+    out["KapazitaetWasserstofftank"] = value.(model[:c_H]);
+    out["KapazitaetBatterie"] = value.(model[:c_bat]);
+    out["GesamteEnergiekosten"] = value.(model[:EC]);
+    out["Investitionen"] = value.(model[:Invest_tot]);
+    out["Restwerte"] = value.(model[:Residual]);
     return out;
+end
+
+function buildTypstInputDataDictionary(data::Data)::String
+    out::String = "(";
+    out = string(out, "WACC: ", formatNum(data.WACC));
+    out = string(out, ",inflation: ", formatNum(data.inflation*100));
+    out = string(out, ",Projektlaufzeit: ", formatNum(data.years, "%12.0f"));
+    out = string(out, ",Wind: ", data.usage_WT);
+    out = string(out, ",PV: ", data.usage_PV);
+    out = string(out, ",Batterie: ", data.usage_bat);
+    out = string(out, ",H2: ", data.usage_H);
+    out = string(out, ",PVFlaeche: ", formatNum(data.max_capa_PV));
+    out = string(out, ",WTFlaeche: ", formatNum(data.max_capa_WT));
+    out = string(out, ",GesStromverbrauch: ", formatNum(sum(data.edem)));
+    out = string(out, ",StrompreisEinkauf: ", formatNum(data.beta_buy[1]));
+    out = string(out, ",StrompreisVerkauf: ", formatNum(data.beta_sell[1]));
+    out = string(out, ",Netzentgelt: ", formatNum(data.beta_buy_LP));  # TODO: validate
+    out = string(out, ",Fernwaermepreis: ", formatNum(data.heat_price));
+    out = string(out, ",Annuitaetenfaktor: ", formatNum(data.CRF_project));
+    return string(out, ")");
 end
 
 function buildTypstOutputDataDictionary(model::Model, dir::String)::String
@@ -74,9 +99,15 @@ function buildTypstOutputDataDictionary(model::Model, dir::String)::String
     out = string(out, ",VerwendeteEnergie: ", formatNum(data["VerwendeteEnergie"]));
     out = string(out, ",NPV: ", formatNum(data["NPV"]));
 
+    out = string(out, ",KapazitaetWasserstofftank: ", formatNum(data["KapazitaetWasserstofftank"]));
+    out = string(out, ",KapazitaetBatterie: ", formatNum(data["KapazitaetBatterie"]));
+    out = string(out, ",GesamteEnergiekosten: ", formatNum(data["GesamteEnergiekosten"]));
+    out = string(out, ",Investitionen: ", formatNum(data["Investitionen"]));
+    out = string(out, ",Restwerte: ", formatNum(data["Restwerte"]));
+
     return string(out, ")");
 end
-function formatNum(x,fmt="%15.2f")::String
+function formatNum(x,fmt="%12.2f")::String
     return string("\"", Printf.format(Printf.Format(fmt), x), "\"")
 end
 

@@ -6,7 +6,7 @@ export generatePdfTest, generatePdf, testG
 export startBackend
 
 using Pkg;
-Pkg.activate("..");
+#Pkg.activate("..");
 #Pkg.instantiate();
 
 using JuMP, XLSX, JSON3, HiGHS, JSON, Pkg, DataStructures

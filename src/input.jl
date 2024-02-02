@@ -170,7 +170,7 @@ mutable struct Data
     inflation::Float64  # user input
     CRF_project::Float64  # calculated depending on user input (WACC, project duration)
 
-    beta_buy_LP::Float64  # user inpu
+    beta_buy_LP::Float64  # user input
     heat_price::Float64  # user input
 
     h_min::Float64  # constant
@@ -249,6 +249,7 @@ mutable struct Data
     shift_edem::Bool  # user input
     shifts::Int64  # user input
     max_height_WT::Float64  # user input
+    years::Int64  # user input
     
     Data() = new()
 end
@@ -265,10 +266,10 @@ end
 function initSampleJSON()::String
     input::String = "{
             \"id\" : 0,
-            \"usage_WT\" : 0,
-            \"usage_PV\" : 0,
-            \"usage_bat\" : 0,
-            \"usage_H\" : 0,
+            \"usage_WT\" : 1,
+            \"usage_PV\" : 1,
+            \"usage_bat\" : 1,
+            \"usage_H\" : 1,
             \"years\" : 20,
             \"shift_edem\" : 0,
             \"shifts\": 0,
@@ -398,8 +399,7 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     data.usage_PV = userData["usage_PV"];
     data.usage_bat = userData["usage_bat"];
     data.usage_H = userData["usage_H"];
-    #data.p = userData["years"];
-    #TODO: p != years -> fix
+    data.years = userData["years"];
     data.shift_edem = userData["shift_edem"];
     data.shifts = userData["shifts"];
     typeEdem::DataType = typeof(userData["edem"]);
@@ -535,7 +535,8 @@ function initDataXLSX(file::String)::Data
                                                                                                                     
     data.ellf = [Float64.(l_elec[12,1]), Float64.(l_elec[13,1]), Float64.(l_elec[14,1]), Float64.(l_elec[15,1])]; # electrolyzer load factor [%]                      -> x-axis [%]
     data.f_z = [Float64.(l_elec[12,2]), Float64.(l_elec[13,2]), Float64.(l_elec[14,2]), Float64.(l_elec[15,2])];  # electrolyzer efficiency factor in breakpoints [%] -> y-axis [%]
-
+    ret = JSON.parse(initSampleJSON());
+    addUserDataToData(data, ret);
     return data;
 end
 
