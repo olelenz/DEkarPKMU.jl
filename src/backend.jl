@@ -56,7 +56,7 @@ function startBackend()
         local idJson::Any;
         local id::Int64;
         try
-            idJson = jsonpayload()["id"];
+            idJson = JSON.parse(rawpayload())["id"];
         catch _
             response.status = 400;
             response.body = "JSON key id in body missing.";
@@ -146,12 +146,12 @@ function startBackend()
 
     route("/processModelInput", method = POST) do
         response::HTTP.Messages.Response = HTTP.Messages.Response();
-        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8"]);
+        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8","Access-Control-Allow-Origin" => "*"]);
 
         local idJson::Any;
         local id::Int64;
         try
-            idJson = jsonpayload()["id"];
+            idJson = JSON.parse(rawpayload())["id"];
         catch _
             response.status = 400;
             response.body = "JSON key id in body missing.";
@@ -166,7 +166,7 @@ function startBackend()
         end
 
         try
-            validateUserData(jsonpayload());
+            validateUserData(JSON.parse(rawpayload()));
         catch e
             response.status = 400;
             response.body = format("Input data not correct: {:s}", e.msg);
@@ -178,15 +178,14 @@ function startBackend()
         enqueue!(processingQueue, id);
         taskList[id] = task;
 
-        taskData[id] = jsonpayload();
+        taskData[id] = JSON.parse(rawpayload());
 
-        #@async begin
-        #    sleep(1);
-        #    schedule(task);
-         #   yield();
-        #end
-        startJob();
-
+        @async begin
+            sleep(1);
+            schedule(task);
+            yield();
+        end
+    
         response.status = 202;
         response.body = format("Started job {:s}.", id);
         return response;
