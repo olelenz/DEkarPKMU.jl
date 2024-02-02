@@ -1,4 +1,4 @@
-#let conf(id, name, pathEigenverbrauch, pathAutarkiegrad, pathDuplicate, outputData) = {
+#let conf(id, name, pathEigenverbrauch, pathAutarkiegrad, pathDuplicate, inputData, outputData) = {
   set page(
     paper: "a4",
     header: [
@@ -47,16 +47,78 @@
     *DEkarPKMU Reporting*
   ])
   text(size: 13pt, weight: "bold")[Input:]
+  let num(var) = {
+     [#align(right, [#outputData.at(var)#h(0.2cm)])]
+  }
+  let numIn(var) = {
+     [#align(right, [#inputData.at(var)#h(0.2cm)])]
+  }
+  let flag(var) = {
+    if inputData.at(var) [#align(right, [Ja])] else [#align(right, [Nein])]
+  }
+  grid(
+    columns: (5cm, 2cm, 2cm, 5cm, 2cm, 2cm),
+    rows: (15pt, 15pt, 15pt, 15pt, 15pt, 15pt),
+    [WACC:],
+    [#numIn("WACC")],
+    [kW],
+    [Inflationsfaktor:],
+    [#numIn("inflation")],
+    [%],
+    [Projektlaufzeit:],
+    [#numIn("Projektlaufzeit")],
+    [Jahre],
+    [Wind:],
+    [#flag("Wind")],
+    [],
+    [Photovoltaik:],
+    [#flag("PV")],
+    [],
+    [Batterie:],
+    [#flag("Batterie")],
+    [],
+    [H2-Speichersystem:],
+    [#flag("H2")],
+    [],
+    [PV Flächenverfügbarkeit:],
+    [#numIn("PVFlaeche")],
+    [$m^2$],
+    [Windernergieanlage Fläche:],
+    [#numIn("WTFlaeche")],
+    [$m^2$],
+    [Windernergie Höhenbegrenzung:],
+    [#align(right, [Nein])],
+    [],
+    [Ges. Stromverbrauch:],
+    [#numIn("GesStromverbrauch")],
+    [kW],
+    [Schichten:],
+    [#align(right, [Nein])],
+    [],
+    [Strompreis Einkauf:],
+    [#numIn("StrompreisEinkauf")],
+    [$"€"/"kWh"$],
+    [Strompreis Verkauf:],
+    [#numIn("StrompreisVerkauf")],
+    [$"€"/"kWh"$],
+    [Netzentgelt:],
+    [#numIn("Netzentgelt")],
+    [$"€"/"kWh"$],
+    [Fernwärmepreis:],
+    [#numIn("Fernwaermepreis")],
+    [$"€"/"kWh"$],
+    [Lastverlauf verschoben:],
+    [#align(right, [Nein])],
+    [],
+
+  )
+
   linebreak()
   text(size: 13pt, weight: "bold")[Kennzahlen:]
   linebreak()
-  set terms(indent: 7pt)
-  let num(var) = {
-    [#align(right, [#outputData.at(var)#h(0.2cm)])]
-  }
   grid(
-    columns: (5cm, 5cm, 2cm),
-    rows: (15pt, 15pt, 15pt),
+    columns: (5cm, 2cm, 2cm, 5cm, 2cm, 2cm),
+    rows: (15pt, 15pt, 15pt, 15pt, 15pt, 15pt),
     [Leistung Elektrolyse:],
     [#num("LeistungElektrolyse")],
     [kW],
@@ -78,13 +140,44 @@
     [Verwendete Energie:],
     [#num("VerwendeteEnergie")],
     [kW],
+    [Kapazität Wasserstofftank:],
+    [#num("KapazitaetWasserstofftank")],
+    [€],
+    [Kapazität Batterie:],
+    [#num("KapazitaetBatterie")],
+    [€],
+    [],
+    [],
+    [],
+
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+
+    [Gesamte Energiekosten:],
+    [#num("GesamteEnergiekosten")],
+    [€],
     [Kapitalwert:],
     [#num("NPV")],
     [€],
+    [Investitionen:],
+    [#num("Investitionen")],
+    [€],
+    [Restwerte:],
+    [#num("Restwerte")],
+    [€],
+    [Annuitätenfaktor:],
+    [#numIn("Annuitaetenfaktor")],
+    [],
 
   )
-  
-  
+
+[Gesamte Energiekosten = (Kapitalwert + Investitionen - Restwerte) times Annuitätenfaktor]
+
+pagebreak()
   grid(
     columns: (1fr, 1fr),
     figure(
@@ -104,7 +197,7 @@
   figure(
     image(
       pathDuplicate,
-      width: 90%,
+      width: 60%,
     )
   )
 

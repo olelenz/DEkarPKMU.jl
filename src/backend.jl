@@ -10,7 +10,7 @@ function startBackend()
         jsonData::Dict{String, Any} = taskData[currentId];
         data::Data = initData(jsonData);
         model = solve_model_fast(HiGHS.Optimizer, data);
-        generatePdf(model, data.id);
+        generatePdf(model, data.id, data);
     end
 
     route("/getStatus/:id", method = GET) do 
@@ -185,7 +185,7 @@ function startBackend()
             schedule(task);
             yield();
         end
-        #startJob();
+    
         response.status = 202;
         response.body = format("Started job {:s}.", id);
         return response;
