@@ -49,15 +49,15 @@ function generatePdf(model::Model, id::Int64, data::Data)
     # TODO: make sure typst is installed!! (with the correct version)
     command0 = "compile";
     # On Windows:
-    #command1 = raw"C:\Users\simulating\AppData\Local\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe";
-    #command2 = "--root=\\";
-    #compileCommand::Cmd = `cmd /c $command1 $command0 $fileAsArgument $command2`;
+    command1 = raw"C:\Users\simulating\AppData\Local\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe";
+    command2 = "--root=\\";
+    compileCommand::Cmd = `cmd /c $command1 $command0 $fileAsArgument $command2`;
 
     # On Mac:
-    command3 = "typst";
-    compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument --root="/"`;
+    #command3 = "typst";
+    #compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument --root="/"`;
     
-    run(compileCommandMac);
+    run(compileCommand);
 end
 
 function generateKennzahlen(model::Model)::Dict{String, Number}
