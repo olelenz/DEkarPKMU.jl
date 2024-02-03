@@ -127,7 +127,7 @@
     [kW],
     [Wasserstofftankfüllstand:],
     [#num("Wasserstofftankfuellstand")],
-    [avg unit?],
+    [],
     [Verkaufter Strom:],
     [#num("VerkaufterStrom")],
     [kW],
@@ -142,10 +142,10 @@
     [kW],
     [Kapazität Wasserstofftank:],
     [#num("KapazitaetWasserstofftank")],
-    [€],
+    [],
     [Kapazität Batterie:],
     [#num("KapazitaetBatterie")],
-    [€],
+    [],
     [],
     [],
     [],
@@ -175,7 +175,7 @@
 
   )
 
-[Gesamte Energiekosten = (Kapitalwert + Investitionen - Restwerte) times Annuitätenfaktor]
+//[Gesamte Energiekosten = (Kapitalwert + Investitionen - Restwerte) times Annuitätenfaktor]
 
 pagebreak()
   grid(

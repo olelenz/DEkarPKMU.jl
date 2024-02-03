@@ -407,7 +407,7 @@ function solve_model_fast(optimizer, data::Data)
 
 
     #OPTIMIZE model
-    optimize!(model);
+    optimize!(model); 
     return model;
 end
 
@@ -581,6 +581,6 @@ function solve_model_var(optimizer, data::Data)
 
 
     #OPTIMIZE model
-    optimize!(model);
+    optimize!(model); 
     return model;
 end

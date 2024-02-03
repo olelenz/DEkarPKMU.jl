@@ -161,8 +161,8 @@ mutable struct Data
     id::Int64  # the id for the current request
     p::Int64  # constant / user input (implemented later)
     edem::Vector{Real}  # user input or calculated depending on overall demand and amount of shifts
-    beta_buy::Vector{Float64}  # user input TODO: only one value
-    beta_sell::Vector{Float64}  # user input TODO: only one value
+    beta_buy::Vector{Float64}  # user input
+    beta_sell::Vector{Float64}  # user input
     re_PV::Vector{Float64}  # constant
     re_WT::Vector{Float64}  # constant
 
@@ -232,8 +232,8 @@ mutable struct Data
     OPEX_var_heat_exchanger::Float64  # constant
     eta_heat_exchanger::Float64  # constant
 
-    max_capa_PV::Float64  # calculated depending on user input (max_area_PV: available area PV)
-    max_capa_WT::Float64  # calculated depending on user input (max_area_WT: available area WT)
+    max_capa_PV::Float64  # user input
+    max_capa_WT::Float64  # user input
 
     fclf::Vector{Float64}  # constant
     f_x::Vector{Float64}  # constant
@@ -399,13 +399,14 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     data.usage_PV = userData["usage_PV"];
     data.usage_bat = userData["usage_bat"];
     data.usage_H = userData["usage_H"];
-    data.years = userData["years"];
+    #data.years = userData["years"];  # TODO: implement
+    data.years = 20;
     data.shift_edem = userData["shift_edem"];
     data.shifts = userData["shifts"];
     typeEdem::DataType = typeof(userData["edem"]);
-    if(typeEdem == Float64)
+    if(typeEdem <: Number)
         data.edem = predictEdem(userData["edem"]);
-    elseif (typeEdem == Vector{Float64})
+    else
         data.edem = userData["edem"];  # TODO: we need to know what happened (server-side)
     end
     data.beta_buy = stretchValueToVector(data.p, userData["beta_buy"]);
@@ -417,9 +418,25 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     data.max_capa_PV = userData["max_area_PV"];
     data.max_capa_WT = userData["max_area_WT"];
     data.max_height_WT = userData["max_height_WT"];
+
+    addRemainingOnInputDependingData(data);
 end
 
-function predictEdem(total::Float64)::Vector{Float64}
+function addRemainingOnInputDependingData(data::Data)
+    data.CRF_project = (data.WACC * ((1+data.WACC)^data.years)) / (((1+data.WACC)^data.years) - 1);
+    data.repl_factor_FC_NPV = 1 + (0.267 / ((1+data.WACC)^15));
+    data.repl_factor_EL_NPV = 1 + (0.267 / ((1+data.WACC)^13));
+    data.repl_factor_bat_NPV = 1 + (0.4 / ((1+data.WACC)^15));
+    data.residualValue_PV = ((1/30) * (30-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_WT = ((1/25) * (25-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_H = ((1/20) * (20-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_heat_exchanger = ((1/25) * (25-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_FC = ((0.267/15) * (2*15-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_EL = ((0.267/13) * (2*13-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_bat = ((0.4/15) * (2*15-data.years)) / ((1+data.WACC)^data.years);
+end
+
+function predictEdem(total::Number)::Vector{Float64}
     # (vec / baseSUm) * total = newVec <==> newVec = vec * (total / baseSum)
     # should be dependent on the amount of shifts in the company
     baseSum::Float64 = 1000.5;

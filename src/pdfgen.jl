@@ -36,7 +36,8 @@ function generatePdf(model::Model, id::Int64, data::Data)
     outputData::String = buildTypstOutputDataDictionary(model, dir);
     arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3], inputData, outputData];
     argumentString::String = join(arguments, ", ");
-    toWrite::String = format("#import \"..\\pageSettings.typ\":conf \n#show: doc => conf({:s}) \n", argumentString);
+    settingsToInclude::String = joinpath("..", "pageSettings.typ");
+    toWrite::String = format("#import \"{:s}\":conf \n#show: doc => conf({:s}) \n", settingsToInclude, argumentString);
     write(file, toWrite);
 
     # close report.typ file
@@ -48,16 +49,15 @@ function generatePdf(model::Model, id::Int64, data::Data)
     # TODO: make sure typst is installed!! (with the correct version)
     command0 = "compile";
     # On Windows:
-    command1 = raw"C:\Users\simulating\AppData\Local\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe";
-    command2 = "--root=\\";
-    compileCommand::Cmd = `cmd /c $command1 $command0 $fileAsArgument $command2`;
+    #command1 = raw"C:\Users\simulating\AppData\Local\Microsoft\WinGet\Packages\Typst.Typst_Microsoft.Winget.Source_8wekyb3d8bbwe\typst-x86_64-pc-windows-msvc\typst.exe";
+    #command2 = "--root=\\";
+    #compileCommand::Cmd = `cmd /c $command1 $command0 $fileAsArgument $command2`;
 
     # On Mac:
     command3 = "typst";
-    command4 = "--root=\\";
-    compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument $command4`;
+    compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument --root="/"`;
     
-    run(compileCommand);
+    run(compileCommandMac);
 end
 
 function generateKennzahlen(model::Model)::Dict{String, Number}

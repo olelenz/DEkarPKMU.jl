@@ -10,7 +10,12 @@ function startBackend()
         jsonData::Dict{String, Any} = taskData[currentId];
         data::Data = initData(jsonData);
         model = solve_model_fast(HiGHS.Optimizer, data);
-        generatePdf(model, data.id, data);
+        status::MathOptInterface.TerminationStatusCode = termination_status(model);
+        if(string(status) != "OPTIMAL" && string(status) != "LOCALLY_SOLVED")
+            error("Model not solveable!");
+        else
+            generatePdf(model, data.id, data);
+        end
     end
 
     route("/getStatus/:id", method = GET) do 
@@ -37,8 +42,18 @@ function startBackend()
         end
 
         response.status = 200;
-        if(istaskfailed(currentTask))
-            response.body = string(message, "failed.");
+        if (istaskfailed(currentTask))
+            msg::String = "";
+            try
+                fetch(currentTask);
+            catch ex
+                try
+                    msg = string(ex.task.exception.msg)
+                catch
+                    msg = string(ex.task.exception)
+                end
+            end
+            response.body = string(message, "failed: ", msg);
         elseif (!istaskstarted(currentTask))
             response.body = string(message, "not started.");
         elseif (istaskstarted(currentTask) && !istaskdone(currentTask))
@@ -185,6 +200,7 @@ function startBackend()
             schedule(task);
             yield();
         end
+        #startJob()
     
         response.status = 202;
         response.body = format("Started job {:s}.", id);
