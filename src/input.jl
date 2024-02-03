@@ -161,8 +161,8 @@ mutable struct Data
     id::Int64  # the id for the current request
     p::Int64  # constant / user input (implemented later)
     edem::Vector{Real}  # user input or calculated depending on overall demand and amount of shifts
-    beta_buy::Vector{Float64}  # user input TODO: only one value
-    beta_sell::Vector{Float64}  # user input TODO: only one value
+    beta_buy::Vector{Float64}  # user input
+    beta_sell::Vector{Float64}  # user input
     re_PV::Vector{Float64}  # constant
     re_WT::Vector{Float64}  # constant
 
@@ -170,7 +170,7 @@ mutable struct Data
     inflation::Float64  # user input
     CRF_project::Float64  # calculated depending on user input (WACC, project duration)
 
-    beta_buy_LP::Float64  # user inpu
+    beta_buy_LP::Float64  # user input
     heat_price::Float64  # user input
 
     h_min::Float64  # constant
@@ -232,8 +232,8 @@ mutable struct Data
     OPEX_var_heat_exchanger::Float64  # constant
     eta_heat_exchanger::Float64  # constant
 
-    max_capa_PV::Float64  # calculated depending on user input (max_area_PV: available area PV)
-    max_capa_WT::Float64  # calculated depending on user input (max_area_WT: available area WT)
+    max_capa_PV::Float64  # user input
+    max_capa_WT::Float64  # user input
 
     fclf::Vector{Float64}  # constant
     f_x::Vector{Float64}  # constant
@@ -249,6 +249,7 @@ mutable struct Data
     shift_edem::Bool  # user input
     shifts::Int64  # user input
     max_height_WT::Float64  # user input
+    years::Int64  # user input
     
     Data() = new()
 end
@@ -265,10 +266,10 @@ end
 function initSampleJSON()::String
     input::String = "{
             \"id\" : 0,
-            \"usage_WT\" : 0,
-            \"usage_PV\" : 0,
-            \"usage_bat\" : 0,
-            \"usage_H\" : 0,
+            \"usage_WT\" : 1,
+            \"usage_PV\" : 1,
+            \"usage_bat\" : 1,
+            \"usage_H\" : 1,
             \"years\" : 20,
             \"shift_edem\" : 0,
             \"shifts\": 0,
@@ -367,70 +368,75 @@ function throwValidationError(field::String, constraint::String, type::DataType,
     end
 end
 
-function addUserDataToData(data::Data, userData::Dict{String, Any})
+function validateUserData(userData::Dict{String, Any})
     throwValidationError("id", INPUT_TYPE_GREATER_EQUAL_ZERO, Int64, userData);
-    data.id = userData["id"];
-
     throwValidationError("usage_WT", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_WT = userData["usage_WT"];
-
     throwValidationError("usage_PV", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_PV = userData["usage_PV"];
-
     throwValidationError("usage_bat", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_bat = userData["usage_bat"];
-
     throwValidationError("usage_H", INPUT_TYPE_BOOL, Int64, userData);
-    data.usage_H = userData["usage_H"];
-
-    #throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
-    #data.p = userData["years"];
-    #TODO: p != years -> fix
-
+    throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
     throwValidationError("shift_edem", INPUT_TYPE_BOOL, Int64, userData);
-    data.shift_edem = userData["shift_edem"];
-
     throwValidationError("shifts", INPUT_TYPE_BOOL, Int64, userData);
-    data.shifts = userData["shifts"];
-    
     typeEdem::DataType = typeof(userData["edem"]);
-    if(typeEdem == Float64)
-        data.edem = predictEdem(userData["edem"]);
-    elseif (typeEdem == Vector{Float64})
-        data.edem = userData["edem"];  # TODO: we need to know what happened (server-side)
-    else
+    if(!(typeEdem <: Real) && !(typeEdem <: Vector{Real}))
         throw(AssertionError(format(INVALID_INPUT_TYPE, "edem", "Float64 or Vector{Float64}", string(typeof(userData["edem"])))));
     end
-
-    throwValidationError("beta_buy", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
-    data.beta_buy = stretchValueToVector(data.p, userData["beta_buy"]);
-
-    throwValidationError("beta_sell", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
-    data.beta_sell = stretchValueToVector(data.p, userData["beta_sell"]);
-
-    throwValidationError("WACC", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
-    data.WACC = userData["WACC"];
-
-    throwValidationError("inflation", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
-    data.inflation = userData["inflation"];
-
-    throwValidationError("beta_buy_LP", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
-    data.beta_buy_LP = userData["beta_buy_LP"];
-
-    throwValidationError("heat_price", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);  # TODO: really geq 0?
-    data.heat_price = userData["heat_price"];
-
-    throwValidationError("max_area_PV", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
-    data.max_capa_PV = userData["max_area_PV"];
-
-    throwValidationError("max_area_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
-    data.max_capa_WT = userData["max_area_WT"];
-
-    throwValidationError("max_height_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Float64, userData);
-    data.max_height_WT = userData["max_height_WT"];
+    throwValidationError("beta_buy", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("beta_sell", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("WACC", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("inflation", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);  # TODO: really geq 0?
+    throwValidationError("beta_buy_LP", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);  # TODO: really geq 0?
+    throwValidationError("heat_price", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);  # TODO: really geq 0?
+    throwValidationError("max_area_PV", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("max_area_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
+    throwValidationError("max_height_WT", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
 end
 
-function predictEdem(total::Float64)::Vector{Float64}
+function addUserDataToData(data::Data, userData::Dict{String, Any})
+    validateUserData(userData);
+    data.id = userData["id"];
+    data.usage_WT = userData["usage_WT"];
+    data.usage_PV = userData["usage_PV"];
+    data.usage_bat = userData["usage_bat"];
+    data.usage_H = userData["usage_H"];
+    #data.years = userData["years"];  # TODO: implement
+    data.years = 20;
+    data.shift_edem = userData["shift_edem"];
+    data.shifts = userData["shifts"];
+    typeEdem::DataType = typeof(userData["edem"]);
+    if(typeEdem <: Number)
+        data.edem = predictEdem(userData["edem"]);
+    else
+        data.edem = userData["edem"];  # TODO: we need to know what happened (server-side)
+    end
+    data.beta_buy = stretchValueToVector(data.p, userData["beta_buy"]);
+    data.beta_sell = stretchValueToVector(data.p, userData["beta_sell"]);
+    data.WACC = userData["WACC"];
+    data.inflation = userData["inflation"];
+    data.beta_buy_LP = userData["beta_buy_LP"];
+    data.heat_price = userData["heat_price"];
+    data.max_capa_PV = userData["max_area_PV"];
+    data.max_capa_WT = userData["max_area_WT"];
+    data.max_height_WT = userData["max_height_WT"];
+
+    addRemainingOnInputDependingData(data);
+end
+
+function addRemainingOnInputDependingData(data::Data)
+    data.CRF_project = (data.WACC * ((1+data.WACC)^data.years)) / (((1+data.WACC)^data.years) - 1);
+    data.repl_factor_FC_NPV = 1 + (0.267 / ((1+data.WACC)^15));
+    data.repl_factor_EL_NPV = 1 + (0.267 / ((1+data.WACC)^13));
+    data.repl_factor_bat_NPV = 1 + (0.4 / ((1+data.WACC)^15));
+    data.residualValue_PV = ((1/30) * (30-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_WT = ((1/25) * (25-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_H = ((1/20) * (20-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_heat_exchanger = ((1/25) * (25-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_FC = ((0.267/15) * (2*15-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_EL = ((0.267/13) * (2*13-data.years)) / ((1+data.WACC)^data.years);
+    data.residualValue_bat = ((0.4/15) * (2*15-data.years)) / ((1+data.WACC)^data.years);
+end
+
+function predictEdem(total::Number)::Vector{Float64}
     # (vec / baseSUm) * total = newVec <==> newVec = vec * (total / baseSum)
     # should be dependent on the amount of shifts in the company
     baseSum::Float64 = 1000.5;
@@ -439,7 +445,7 @@ function predictEdem(total::Float64)::Vector{Float64}
     return outVec;
 end
 
-function stretchValueToVector(size::Int64, value::Float64)::Vector{Float64}
+function stretchValueToVector(size::Int64, value::Number)::Vector{Float64}
     return fill(value, size);
 end
 
@@ -546,7 +552,8 @@ function initDataXLSX(file::String)::Data
                                                                                                                     
     data.ellf = [Float64.(l_elec[12,1]), Float64.(l_elec[13,1]), Float64.(l_elec[14,1]), Float64.(l_elec[15,1])]; # electrolyzer load factor [%]                      -> x-axis [%]
     data.f_z = [Float64.(l_elec[12,2]), Float64.(l_elec[13,2]), Float64.(l_elec[14,2]), Float64.(l_elec[15,2])];  # electrolyzer efficiency factor in breakpoints [%] -> y-axis [%]
-
+    ret = JSON.parse(initSampleJSON());
+    addUserDataToData(data, ret);
     return data;
 end
 

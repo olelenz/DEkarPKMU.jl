@@ -10,7 +10,12 @@ function startBackend()
         jsonData::Dict{String, Any} = taskData[currentId];
         data::Data = initData(jsonData);
         model = solve_model_fast(HiGHS.Optimizer, data);
-        generatePdf(model, data.id);
+        status::MathOptInterface.TerminationStatusCode = termination_status(model);
+        if(string(status) != "OPTIMAL" && string(status) != "LOCALLY_SOLVED")
+            error("Model not solveable!");
+        else
+            generatePdf(model, data.id, data);
+        end
     end
 
     route("/getStatus/:id", method = GET) do 
@@ -37,8 +42,18 @@ function startBackend()
         end
 
         response.status = 200;
-        if(istaskfailed(currentTask))
-            response.body = string(message, "failed.");
+        if (istaskfailed(currentTask))
+            msg::String = "";
+            try
+                fetch(currentTask);
+            catch ex
+                try
+                    msg = string(ex.task.exception.msg)
+                catch
+                    msg = string(ex.task.exception)
+                end
+            end
+            response.body = string(message, "failed: ", msg);
         elseif (!istaskstarted(currentTask))
             response.body = string(message, "not started.");
         elseif (istaskstarted(currentTask) && !istaskdone(currentTask))
@@ -56,7 +71,7 @@ function startBackend()
         local idJson::Any;
         local id::Int64;
         try
-            idJson = jsonpayload()["id"];
+            idJson = JSON.parse(rawpayload())["id"];
         catch _
             response.status = 400;
             response.body = "JSON key id in body missing.";
@@ -124,21 +139,34 @@ function startBackend()
         
         basePath::String = joinpath(@__DIR__, string("pdfGen/temp_", id));
         pathToPdf::String = joinpath(basePath, "report.pdf");
-        pathToImg1::String = joinpath(basePath, "SOC.png");
-        pathToImg2::String = joinpath(basePath, "SOC.png");
+        pathToImg1::String = joinpath(basePath, "Eigenverbrauch.png");
+        pathToImg2::String = joinpath(basePath, "Autarkiegrad.png");
         pathToImg3::String = joinpath(basePath, "SOC.png");
+        # TODO: add text output data
+        returnDictionary= Dict(
+            "pathToPdf" => pathToPdf, 
+            "pathToImg1" => pathToImg1, 
+            "pathToImg2" => pathToImg2, 
+            "pathToImg3" => pathToImg3);
+
+        kennzahlenDictionary::Dict{String, Number} = JSON3.read(read(joinpath(basePath, "Kennzahlen.txt"), String), Dict{String, Number});
+        kennzahlenDictionaryString::Dict{String, String} = Dict{String, String}();
+        for (key, value) in kennzahlenDictionary
+            kennzahlenDictionaryString[key] = string(Printf.format(Printf.Format("%.2f"), value));
+        end
+        returnDictionary = merge(returnDictionary, kennzahlenDictionaryString);
         
-        return JSON.json(Dict(:pathToPdf => pathToPdf, :pathToImg1 => pathToImg1, :pathToImg2 => pathToImg2, :pathToImg3 => pathToImg3));
+        return JSON.json(returnDictionary);
     end
 
     route("/processModelInput", method = POST) do
         response::HTTP.Messages.Response = HTTP.Messages.Response();
-        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8"]);
+        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8","Access-Control-Allow-Origin" => "*"]);
 
         local idJson::Any;
         local id::Int64;
         try
-            idJson = jsonpayload()["id"];
+            idJson = JSON.parse(rawpayload())["id"];
         catch _
             response.status = 400;
             response.body = "JSON key id in body missing.";
@@ -152,20 +180,28 @@ function startBackend()
             return response;
         end
 
+        try
+            validateUserData(JSON.parse(rawpayload()));
+        catch e
+            response.status = 400;
+            response.body = format("Input data not correct: {:s}", e.msg);
+            return response;
+        end
+
         task::Task = Task(startJob);
         push!(currentJobsSet, id);
         enqueue!(processingQueue, id);
         taskList[id] = task;
 
-        # TODO: verify data
-        taskData[id] = jsonpayload();
+        taskData[id] = JSON.parse(rawpayload());
 
         @async begin
             sleep(1);
             schedule(task);
             yield();
         end
-
+        #startJob()
+    
         response.status = 202;
         response.body = format("Started job {:s}.", id);
         return response;

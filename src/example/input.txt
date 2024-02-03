@@ -1,0 +1,99 @@
+WACC:
+    json key: 'WACC'
+    data-type: float >= 0
+    unit: %
+    example: 8.6
+    
+Inflationsfaktor:
+    json key: 'inflation'
+    data-type: float >= 0
+    unit: %
+    example: 2.0
+
+Projektlaufzeit:
+    json key: 'years'
+    data-type: int > 0
+    unit: Jahre
+    example: 20
+
+Wind:
+    json key: 'usage_WT'
+    data-type: bool
+    unit: Ja/Nein
+    example: 1
+
+Wärme: nicht gebraut, dafür aber 'Photovoltaik'
+    json key: 'usage_PV'
+    data-type: bool
+    unit: Ja/Nein
+    example: 0
+
+Batterie:
+    json key: 'usage_bat'
+    data-type: bool
+    unit: Ja/Nein
+    example: 1
+
+H2-Speichersystem:
+    json key: 'usage_H'
+    data-type: bool
+    unit: Ja/Nein
+    example: 1
+
+PV Flächenverfügbarkeit:
+    json key: 'max_area_PV'
+    data-type: float >= 0
+    unit: m^2
+    example: 10000.0
+
+Wind Flächenverfügbarkeit:
+    json key: 'max_area_WT'
+    data-type: float >= 0
+    unit: m^2
+    example: 10000.0
+
+Stromverbrauch Gesamt: hier sollte entweder der gesamte Verbrauch oder die Lastreihe übergeben werden, dann brauche ich das Eingabefeld 'Lastreihe Strom verfügbar' auch nicht im JSON
+    json key: 'edem'
+    data-type: float >= 0 or vector(float)
+    unit: kW or vector(kWh)
+    example: 609584.869 or [2.544, 1.32525,...]
+
+Schichtmodell: das muss nicht angegeben werden (bzw. ist dann der übergebene Wert irrelevant), wenn eine Lastreihe vorhanden ist
+    json key: 'max_area_PV'
+    data-type: 1, 2 or 3
+    unit: Anzahl der Schichten
+    example: 1
+
+Strompreis aktuell: sollte aufgeteilt werden in 'Strompreis aktuell Einkauf' und 'Strompreis aktuell Verkauf'
+    Einkauf:
+        json key: 'beta_buy'
+        data-type: float >= 0
+        unit: EUR/kWh
+        example: 0.15686
+    Verkauf:
+        json key: 'beta_sell'
+        data-type: float >= 0
+        unit: EUR/kWh
+        example: 0.05423
+
+Netzentgelt: hier sollte brutto stehen (nicht butto)
+    json key: 'beta_buy_LP'
+    data-type: float >= 0
+    unit: EUR/kWh
+    example: 59.25
+
+Verschieben Lastverlauf möglich: hier vll. anmerken, dass der Lastverlauf dann -1h und +1h verschoben werden kann
+    json key: 'shift_edem'
+    data-type: bool
+    unit: Ja/Nein
+    example: 1
+
+Wärmepreis: sollte noch hinzugefügt werden (unter aktuelle Preise)
+    json key: 'heat_price'
+    data-type: float >= 0
+    unit: EUR/kWh
+    example: 0.0986
+    
+
+Eventuell für die Zukunft angedacht (noch aus dem ursprünglichen JSON Dokument):
+    "max_height_WT":"(15.5)[float] - maximum height for the WT system, for now not available (m)"
