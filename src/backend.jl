@@ -207,5 +207,10 @@ function startBackend()
         return response;
     end
 
+    Genie.config.run_as_server = true
+    Genie.config.cors_headers["Access-Control-Allow-Origin"] = "http://localhost:8001"
+    Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type"
+    Genie.config.cors_headers["Access-Control-Allow-Methods"] ="GET,POST" 
+    Genie.config.cors_allowed_origins = ["*"]
     up(8001, async = false);
 end
