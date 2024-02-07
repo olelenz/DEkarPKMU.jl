@@ -10,7 +10,7 @@ const INPUT_TYPE_GREATER_EQUAL_ZERO::String = "GEQ0";
 
 ### FIXED VALUES
 
-# p_const: periods (fixed to 8760) TODO: why that number
+# p_const: periods (hours in a year)
 const p_const::Int64 = 8760;
 
 # edemBaseVec: vector containing the energy demand as an average of 30 small and medium sized companies in Germany (2017)
@@ -159,7 +159,7 @@ const f_z_const::Vector{Float64} = [0.0, 0.46, 0.6, 0.58];
 
 mutable struct Data
     id::Int64  # the id for the current request
-    p::Int64  # constant / user input (implemented later)
+    p::Int64  # constant
     edem::Vector{Real}  # user input or calculated depending on overall demand and amount of shifts
     beta_buy::Vector{Float64}  # user input
     beta_sell::Vector{Float64}  # user input
@@ -293,7 +293,7 @@ end
 
 function initData(inputDict::Dict{String, Any})::Data
     data::Data = Data();
-    ret::Dict{String, Any} = inputDict;;
+    ret::Dict{String, Any} = inputDict;
 
     data.p = p_const;
     data.re_PV = re_PV_const;
