@@ -9,7 +9,8 @@ function startBackend()
         currentId::Int64 = dequeue!(processingQueue);
         jsonData::Dict{String, Any} = taskData[currentId];
         data::Data = initData(jsonData);
-        model = solve_model_fast(HiGHS.Optimizer, data);
+        #model = solve_model_fast(HiGHS.Optimizer, data);
+        model = solve_model_var(HiGHS.Optimizer, data);        
         status::MathOptInterface.TerminationStatusCode = termination_status(model);
         if(string(status) != "OPTIMAL" && string(status) != "LOCALLY_SOLVED")
             error("Model not solveable!");
@@ -195,13 +196,13 @@ function startBackend()
 
         taskData[id] = JSON.parse(rawpayload());
 
-        @async begin
-            sleep(1);
-            schedule(task);
-            yield();
-        end
-        #startJob()
-    
+        #@async begin
+        #    sleep(1);
+        #    schedule(task);
+        #    yield();
+        #end
+        startJob()
+
         response.status = 202;
         response.body = format("Started job {:s}.", id);
         return response;

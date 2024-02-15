@@ -1,4 +1,4 @@
-#let conf(id, name, pathEigenverbrauch, pathAutarkiegrad, pathDuplicate, inputData, outputData) = {
+#let conf(id, name, pathEigenverbrauch, pathAutarkiegrad, pathLastverlauf, inputData, outputData) = {
   set page(
     paper: "a4",
     header: [
@@ -92,7 +92,7 @@
     [#numIn("GesStromverbrauch")],
     [kW],
     [Schichten:],
-    [#align(right, [Nein])],
+    [#numIn("Schichten")],
     [],
     [Strompreis Einkauf:],
     [#numIn("StrompreisEinkauf")],
@@ -176,28 +176,27 @@
 
 //[Gesamte Energiekosten = (Kapitalwert + Investitionen - Restwerte) times Annuitätenfaktor]
 
-pagebreak()
+  figure(
+    image(
+      pathLastverlauf,
+      width: 98%,
+    )
+  )
   grid(
     columns: (1fr, 1fr),
     figure(
       image(
         pathEigenverbrauch,
-        width: 90%,
+        width: 70%,
       )
     ),
     figure(
       image(
         pathAutarkiegrad,
-        width: 90%,
+        width: 70%,
       )
     )
   )
 
-  figure(
-    image(
-      pathDuplicate,
-      width: 60%,
-    )
-  )
 
 }

@@ -1,5 +1,6 @@
 using Formatting
 using Plots
+using Plots.PlotMeasures
 
 include("./pdfGen/varTemplate.jl");
 function generatePdfTest()
@@ -18,8 +19,8 @@ function generatePdf(model::Model, id::Int64, data::Data)
         rm(dir, recursive=true);
     end
     mkdir(dir)
-    graphNames::Vector{String} = ["Eigenvebrauch.png", "Autarkiegrad.png", "SOC.png"];
-    generateGraphs(dir, graphNames, model);
+    graphNames::Vector{String} = ["Eigenvebrauch.png", "Autarkiegrad.png", "Lastverlauf.png"];
+    generateGraphs(dir, graphNames, model, data);
 
     # create .typ file
     filePath::String = joinpath(dir, "report.typ");
@@ -54,10 +55,10 @@ function generatePdf(model::Model, id::Int64, data::Data)
     compileCommand::Cmd = `cmd /c $command1 $command0 $fileAsArgument $command2`;
 
     # On Mac:
-    #command3 = "typst";
-    #compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument --root="/"`;
+    command3 = "typst";
+    compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument --root="/"`;
     
-    run(compileCommand);
+    run(compileCommandMac);
 end
 
 function generateKennzahlen(model::Model)::Dict{String, Number}
@@ -90,6 +91,7 @@ function buildTypstInputDataDictionary(data::Data)::String
     out = string(out, ",PVFlaeche: ", formatNum(data.max_capa_PV));
     out = string(out, ",WTFlaeche: ", formatNum(data.max_capa_WT));
     out = string(out, ",GesStromverbrauch: ", formatNum(sum(data.edem)));
+    out = string(out, ",Schichten: ", data.shifts);
     out = string(out, ",StrompreisEinkauf: ", formatNum(data.beta_buy[1]));
     out = string(out, ",StrompreisVerkauf: ", formatNum(data.beta_sell[1]));
     out = string(out, ",Netzentgelt: ", formatNum(data.beta_buy_LP));  # TODO: validate
@@ -123,7 +125,7 @@ function formatNum(x,fmt="%12.2f")::String
     return string("\"", Printf.format(Printf.Format(fmt), x), "\"")
 end
 
-function generateGraphs(dir::String, names::Vector{String}, model::Model)
+function generateGraphs(dir::String, names::Vector{String}, model::Model, data::Data)
     # Eigenverbrauch pie chart
     labelsEigenverbrauch::Vector{String} = ["verkaufter Strom", "eigens genutzter Strom"];
 
@@ -142,16 +144,32 @@ function generateGraphs(dir::String, names::Vector{String}, model::Model)
     total_buy::Float64 = value.(model[:Total_buy]);
     total_gen::Float64 = value.(model[:Total_PV_GEN]) + value.(model[:Total_WT_GEN]);
     sum_energy_input::Float64 = total_buy + total_gen;
+    println(total_buy)
+    println(sum_energy_input)
+    println(total_gen)
+    println(sum_energy_input)
     valuesAutarkiegrad::Vector{Float64} = [total_buy/sum_energy_input, total_gen/sum_energy_input];
 
     autarkiegradPlot::Plots.Plot{Plots.GRBackend} = pie(labelsAutarkiegrad, valuesAutarkiegrad, dpi = 1000, title = "Autarkiegrad");
     autarkiegradPath::String = joinpath(dir, names[2]);
     savefig(autarkiegradPlot, autarkiegradPath);
 
-    # plot SOC
-    socPlot::Plots.Plot{Plots.GRBackend} = plot(value.(model[:SOC]), dpi=1000);
-    socPath::String = joinpath(dir, names[3]);
-    savefig(socPlot, socPath);
+    # plot avg Lastverlauf
+    sizeWeek::Int64 = 168;
+    lastverlauf::Vector{Float64} = data.edem;
+    avgLastverlauf::Vector{Float64} = lastverlauf[25:sizeWeek+24];
+    for i = 2:51
+        avgLastverlauf = avgLastverlauf + lastverlauf[(i-1)*sizeWeek + 25 : i*sizeWeek + 24];
+    end
+    avgLastverlauf = avgLastverlauf / 51;
+    daysSeperator::Vector{Int64} = [1, 24, 48, 72, 96, 120, 144, 168];
+    days::Vector{Int64} = [12, 36, 60, 84, 108, 132, 156];
+    labels::Vector{String} = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+    axis::Tuple{Vector{Int64}, Vector{String}} = (days, labels);
+    outputPlot::Plots.Plot{Plots.GRBackend} = plot(avgLastverlauf, xticks = axis, dpi=1000, xlabel = "Wochentage", ylabel = "kW", size = (1700, 500), label = "durchschnittlicher Lastverlauf", title = "durchschnittlicher Lastverlauf", legend = false, bottom_margin=40px, left_margin=40px);
+    outputPlot = vline!(daysSeperator, linestyle=:dot, label = "");
+    lastverlaufPath::String = joinpath(dir, names[3]);
+    savefig(outputPlot, lastverlaufPath);
 end
 
 function testG()
