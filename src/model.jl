@@ -352,13 +352,13 @@ function solve_model_fast(optimizer, data::Data)
     # PV capacity constraints including investment decision and OPEX calculation (including scale effects)
     #@constraint(model, sum(i)==1)       
     #@constraint(model, Invest_PV == sum(i[a]*Capacity_cost_PV[a] for a=1:3)*c_PV)
-    #@constraint(model, OPEX_PV == sum(i[a]*OPEX_pv0[a] for a=1:3)*c_PV)
     #@constraint(model, c_PV >= i[3]*1000)
     #@constraint(model, c_PV >= i[2]*30)
     #@constraint(model, c_PV >= i[1]*0)           
     @constraint(model, Invest_PV == data.capacity_cost_PV2 * c_PV);
     @constraint(model, c_PV >= 30);
     @constraint(model, c_PV <= data.max_capa_PV)
+    @constraint(model, OPEX_PV == data.OPEX_PV2*c_PV)
 
     # WT capacity constraints including investment decision and OPEX calculation (including scale effects)                
     #@constraint(model, sum(k)==1)  
@@ -369,8 +369,6 @@ function solve_model_fast(optimizer, data::Data)
     @constraint(model, Invest_WT == data.capacity_cost_WT2 * c_WT);
     @constraint(model, c_WT >= 100);
     @constraint(model, c_WT <= data.max_capa_WT)
-
-
     @constraint(model, OPEX_WT == c_WT*data.OPEX_WT_fix/8760*data.p + sum(data.re_WT[x]*c_WT*data.OPEX_WT_var for x=1:data.p))
 
     # Electrolyzer constraints including investment decision
@@ -486,15 +484,18 @@ function solve_model_var(optimizer, data::Data)
         @constraint(model, Invest_PV == data.capacity_cost_PV2 * c_PV);
         @constraint(model, c_PV >= 30);
         @constraint(model, c_PV <= data.max_capa_PV)
+        @constraint(model, OPEX_PV == data.OPEX_PV2*c_PV)
     else
         @constraint(model, Invest_PV <= 0);
         @constraint(model, c_PV == 0);
+        @constraint(model, OPEX_PV == 0);
     end
     
     # WT
     if(data.usage_WT)
         @constraint(model, Invest_WT == data.capacity_cost_WT2 * c_WT);
         @constraint(model, c_WT >= 100);
+        @constraint(model, c_WT <= data.max_capa_WT)
         @constraint(model, OPEX_WT == c_WT*data.OPEX_WT_fix/8760*data.p + sum(data.re_WT[x]*c_WT*data.OPEX_WT_var for x=1:data.p))
     else
         @constraint(model, Invest_WT <= 0);
@@ -539,9 +540,6 @@ function solve_model_var(optimizer, data::Data)
 
     else
         @constraint(model, c_H <= 0)
-        @constraint(model, [p=1:data.p], 0 <= H[p]) ;                          # hydrogen tank capacity  
-        @constraint(model, [p=1:data.p], H[p] <= 0);                           # hydrogen tank capacity
-
         @constraint(model, [p=1:data.p], H[p] == 0);     # hydrogen balance    
 
         @constraint(model, Invest_H == 0)
@@ -579,9 +577,8 @@ function solve_model_var(optimizer, data::Data)
         @constraint(model, [p=2:data.p], SOC[p] == SOC[p-1] + data.eta_bat_in*R_Bat_in[p] - R_Bat_out[p] - (SOC[p-1]*data.self_discharge/100));  # battery balance    
         @constraint(model, [p=data.p], SOC[p] == data.SOC_init*c_bat);                                                                    # last period battery balance
     else
-        @constraint(model, c_bat <= 0)
+        @constraint(model, c_bat == 0)
         @constraint(model, Invest_bat == 0);
-        @constraint(model, c_bat >= 0);
         @constraint(model, [p=1:data.p], SOC[p] == 0);  # battery balance    
     end
 
