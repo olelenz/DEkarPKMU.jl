@@ -358,7 +358,6 @@ function solve_model_fast(optimizer, data::Data)
     #@constraint(model, c_PV >= i[1]*0)           
     @constraint(model, Invest_PV == data.capacity_cost_PV2 * c_PV);
     @constraint(model, c_PV >= 30);
-
     @constraint(model, c_PV <= data.max_capa_PV)
 
     # WT capacity constraints including investment decision and OPEX calculation (including scale effects)                
@@ -367,9 +366,9 @@ function solve_model_fast(optimizer, data::Data)
     #@constraint(model, c_WT >= k[3]*1000)     #  >= 1000 kW
     #@constraint(model, c_WT >= k[2]*100)      # 100 kW - 1000 kW
     #@constraint(model, c_WT >= k[1]*0)        # < 100 kW
-    #@constraint(model, c_WT <= data.max_capa_WT)
     @constraint(model, Invest_WT == data.capacity_cost_WT2 * c_WT);
     @constraint(model, c_WT >= 100);
+    @constraint(model, c_WT <= data.max_capa_WT)
 
 
     @constraint(model, OPEX_WT == c_WT*data.OPEX_WT_fix/8760*data.p + sum(data.re_WT[x]*c_WT*data.OPEX_WT_var for x=1:data.p))

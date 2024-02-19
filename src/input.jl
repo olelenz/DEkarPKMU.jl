@@ -427,8 +427,8 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     data.inflation = userData["inflation"];
     data.beta_buy_LP = userData["beta_buy_LP"];
     data.heat_price = userData["heat_price"];
-    data.max_capa_PV = userData["max_area_PV"];
-    data.max_capa_WT = userData["max_area_WT"];
+    data.max_capa_PV = userData["max_area_PV"] / 5;
+    data.max_capa_WT = userData["max_area_WT"] / 50;
     data.max_height_WT = userData["max_height_WT"];
 
     addRemainingOnInputDependingData(data);
