@@ -58,7 +58,7 @@ function generatePdf(model::Model, id::Int64, data::Data)
     command3 = "typst";
     compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument --root="/"`;
     
-    run(compileCommandMac);
+    run(compileCommand);
 end
 
 function generateKennzahlen(model::Model)::Dict{String, Number}
