@@ -352,14 +352,13 @@ function solve_model_fast(optimizer, data::Data)
     # PV capacity constraints including investment decision and OPEX calculation (including scale effects)
     #@constraint(model, sum(i)==1)       
     #@constraint(model, Invest_PV == sum(i[a]*Capacity_cost_PV[a] for a=1:3)*c_PV)
-    #@constraint(model, OPEX_PV == sum(i[a]*OPEX_pv0[a] for a=1:3)*c_PV)
     #@constraint(model, c_PV >= i[3]*1000)
     #@constraint(model, c_PV >= i[2]*30)
     #@constraint(model, c_PV >= i[1]*0)           
     @constraint(model, Invest_PV == data.capacity_cost_PV2 * c_PV);
     @constraint(model, c_PV >= 30);
-
     @constraint(model, c_PV <= data.max_capa_PV)
+    @constraint(model, OPEX_PV == data.OPEX_PV2*c_PV)
 
     # WT capacity constraints including investment decision and OPEX calculation (including scale effects)                
     #@constraint(model, sum(k)==1)  
@@ -367,11 +366,9 @@ function solve_model_fast(optimizer, data::Data)
     #@constraint(model, c_WT >= k[3]*1000)     #  >= 1000 kW
     #@constraint(model, c_WT >= k[2]*100)      # 100 kW - 1000 kW
     #@constraint(model, c_WT >= k[1]*0)        # < 100 kW
-    #@constraint(model, c_WT <= data.max_capa_WT)
     @constraint(model, Invest_WT == data.capacity_cost_WT2 * c_WT);
     @constraint(model, c_WT >= 100);
-
-
+    @constraint(model, c_WT <= data.max_capa_WT)
     @constraint(model, OPEX_WT == c_WT*data.OPEX_WT_fix/8760*data.p + sum(data.re_WT[x]*c_WT*data.OPEX_WT_var for x=1:data.p))
 
     # Electrolyzer constraints including investment decision
@@ -486,15 +483,24 @@ function solve_model_var(optimizer, data::Data)
     if(data.usage_PV)
         @constraint(model, Invest_PV == data.capacity_cost_PV2 * c_PV);
         @constraint(model, c_PV >= 30);
-
         @constraint(model, c_PV <= data.max_capa_PV)
+        @constraint(model, OPEX_PV == data.OPEX_PV2*c_PV)
+    else
+        @constraint(model, Invest_PV <= 0);
+        @constraint(model, c_PV == 0);
+        @constraint(model, OPEX_PV == 0);
     end
     
     # WT
     if(data.usage_WT)
         @constraint(model, Invest_WT == data.capacity_cost_WT2 * c_WT);
         @constraint(model, c_WT >= 100);
+        @constraint(model, c_WT <= data.max_capa_WT)
         @constraint(model, OPEX_WT == c_WT*data.OPEX_WT_fix/8760*data.p + sum(data.re_WT[x]*c_WT*data.OPEX_WT_var for x=1:data.p))
+    else
+        @constraint(model, Invest_WT <= 0);
+        @constraint(model, c_WT == 0);
+        @constraint(model, OPEX_WT == 0)
     end
 
     # H
@@ -508,6 +514,56 @@ function solve_model_var(optimizer, data::Data)
         @constraint(model, [p=2:data.p], H[p] == H[p-1] + EL_output[p] - R_FC[p]);     # hydrogen balance    
         @constraint(model, [p=data.p], H[p] == data.h_init*c_H);                            # last period hydrogen balance   
         @constraint(model, Invest_H == c_H*data.capacity_cost_H)
+
+        @constraint(model, c_EL <= 100000)
+        @constraint(model, c_FC <= 100000)
+        @constraint(model, c_heat_exchanger_EL <= 100000)
+        @constraint(model, c_heat_exchanger_FC <= 100000)
+
+        @constraint(model, [p=1:data.p], EL_output[p] <= c_EL); # electrolyzer capacity    
+        @constraint(model, [p=1:data.p], FC_output[p] <= c_FC); # fuel cell capacity    
+        #
+        # Electrolyzer constraints including investment decision
+        @constraint(model, Invest_EL == c_EL*data.capacity_cost_EL)
+
+        # Fuel cell constraints including investment decision
+        @constraint(model, Invest_FC == c_FC*data.capacity_cost_FC)
+
+        @constraint(model, [p=1:data.p], used_heat_FC[p] <= R_FC[p] * data.waste_heat_FC * data.eta_heat_exchanger); # usable heat is heat output of fuel cell multiplied with efficiency
+        @constraint(model, [p=1:data.p], used_heat_FC[p] <= c_heat_exchanger_FC);                        # usable heat is lower or same as capacity of heat exchanger
+        @constraint(model, Invest_heat_exchanger_FC == c_heat_exchanger_FC * data.capacity_cost_heat_exchanger)
+        @constraint(model, OPEX_heat_exchanger_FC == c_heat_exchanger_FC * data.OPEX_fix_heat_exchanger + sum(used_heat_FC[x]*data.OPEX_var_heat_exchanger for x=1:data.p))
+        @constraint(model, [p=1:data.p], used_heat_EL[p] <= R_EL[p] * data.waste_heat_EL * data.eta_heat_exchanger); # usable heat is heat output of fuel cell multiplied with efficiency
+        @constraint(model, [p=1:data.p], used_heat_EL[p] <= c_heat_exchanger_EL);                        # usable heat is lower or same as capacity of heat exchanger
+        @constraint(model, Invest_heat_exchanger_EL == c_heat_exchanger_EL * data.capacity_cost_heat_exchanger)
+        @constraint(model, OPEX_heat_exchanger_EL == c_heat_exchanger_EL * data.OPEX_fix_heat_exchanger + sum(used_heat_EL[x]*data.OPEX_var_heat_exchanger for x=1:data.p))
+
+    else
+        @constraint(model, c_H <= 0)
+        @constraint(model, [p=1:data.p], H[p] == 0);     # hydrogen balance    
+
+        @constraint(model, Invest_H == 0)
+
+        @constraint(model, c_EL <= 0)
+        @constraint(model, c_FC <= 0)
+        @constraint(model, c_heat_exchanger_EL <= 0)
+        @constraint(model, c_heat_exchanger_FC <= 0)
+
+        @constraint(model, [p=1:data.p], EL_output[p] <= 0); # electrolyzer capacity    
+        @constraint(model, [p=1:data.p], FC_output[p] <= 0); # fuel cell capacity    
+
+        # Electrolyzer constraints including investment decision
+        @constraint(model, Invest_EL == 0)
+
+        # Fuel cell constraints including investment decision
+        @constraint(model, Invest_FC == 0)
+
+        @constraint(model, [p=1:data.p], used_heat_FC[p] <= 0);                               
+        @constraint(model, Invest_heat_exchanger_FC == 0)
+        @constraint(model, OPEX_heat_exchanger_FC == 0)
+        @constraint(model, [p=1:data.p], used_heat_EL[p] <= 0);                        
+        @constraint(model, Invest_heat_exchanger_EL == 0)
+        @constraint(model, OPEX_heat_exchanger_EL == 0)
     end
     
     # bat
@@ -520,34 +576,23 @@ function solve_model_var(optimizer, data::Data)
         @constraint(model, [p=1], SOC[p] == data.SOC_init*c_bat + data.eta_bat_in*R_Bat_in[p] - R_Bat_out[p]);                              # battery balance in first period
         @constraint(model, [p=2:data.p], SOC[p] == SOC[p-1] + data.eta_bat_in*R_Bat_in[p] - R_Bat_out[p] - (SOC[p-1]*data.self_discharge/100));  # battery balance    
         @constraint(model, [p=data.p], SOC[p] == data.SOC_init*c_bat);                                                                    # last period battery balance
+    else
+        @constraint(model, c_bat == 0)
+        @constraint(model, Invest_bat == 0);
+        @constraint(model, [p=1:data.p], SOC[p] == 0);  # battery balance    
     end
 
     #Maximum values
-    @constraint(model, c_EL <= 100000)
-    @constraint(model, c_FC <= 100000)
-    @constraint(model, c_heat_exchanger_EL <= 100000)
-    @constraint(model, c_heat_exchanger_FC <= 100000)
     @constraint(model, [p=1:data.p], E_sold[p] <= 100000)
     @constraint(model, [p=1:data.p], E_purchased[p] <= 100000)
    
     # HESS constraints 
- 
-    @constraint(model, [p=1:data.p], EL_output[p] <= c_EL); # electrolyzer capacity    
-    @constraint(model, [p=1:data.p], FC_output[p] <= c_FC); # fuel cell capacity    
     
     @constraint(model, r_EL .== data.ellf .* c_EL);
     #        @constraint(model, [p=1:data.p], EL_output[p] == sum(V[z,p]*data.f_z[z]*R_EL[p] for z=1:Z));
     @constraint(model, r_FC .== data.fclf .* c_FC);                                                  # "real" fuel cell load [kW]                  
     #        @constraint(model, [p=1:data.p], FC_output[p] == sum(Λ[b,p]*data.f_x[b]*R_FC[p] for b=1:B));
     
-    @constraint(model, [p=1:data.p], used_heat_FC[p] <= R_FC[p] * data.waste_heat_FC * data.eta_heat_exchanger); # usable heat is heat output of fuel cell multiplied with efficiency
-    @constraint(model, [p=1:data.p], used_heat_FC[p] <= c_heat_exchanger_FC);                        # usable heat is lower or same as capacity of heat exchanger
-    @constraint(model, Invest_heat_exchanger_FC == c_heat_exchanger_FC * data.capacity_cost_heat_exchanger)
-    @constraint(model, OPEX_heat_exchanger_FC == c_heat_exchanger_FC * data.OPEX_fix_heat_exchanger + sum(used_heat_FC[x]*data.OPEX_var_heat_exchanger for x=1:data.p))
-    @constraint(model, [p=1:data.p], used_heat_EL[p] <= R_EL[p] * data.waste_heat_EL * data.eta_heat_exchanger); # usable heat is heat output of fuel cell multiplied with efficiency
-    @constraint(model, [p=1:data.p], used_heat_EL[p] <= c_heat_exchanger_EL);                        # usable heat is lower or same as capacity of heat exchanger
-    @constraint(model, Invest_heat_exchanger_EL == c_heat_exchanger_EL * data.capacity_cost_heat_exchanger)
-    @constraint(model, OPEX_heat_exchanger_EL == c_heat_exchanger_EL * data.OPEX_fix_heat_exchanger + sum(used_heat_EL[x]*data.OPEX_var_heat_exchanger for x=1:data.p))
     
     @constraint(model, [p=1:data.p], max_E_purchased >= E_purchased[p])                              # max. amount of purchased energy in one period
     
@@ -564,21 +609,11 @@ function solve_model_var(optimizer, data::Data)
     @constraint(model, NPV_annual_costs >= sum((Annual_costs*((1+data.inflation)^t)/((1+data.WACC)^t)) for t=1:20))   
     @constraint(model, Residual <= data.residualValue_PV*Invest_PV/8760*data.p + data.residualValue_WT*Invest_WT/8760*data.p + data.residualValue_bat*Invest_bat/8760*data.p + data.residualValue_EL*Invest_EL/8760*data.p + data.residualValue_FC*Invest_FC/8760*data.p + data.residualValue_H*Invest_H/8760*data.p + data.residualValue_heat_exchanger*((Invest_heat_exchanger_EL/8760*data.p)+(Invest_heat_exchanger_FC/8760*data.p)))
         
-
-    # Electrolyzer constraints including investment decision
-    @constraint(model, Invest_EL == c_EL*data.capacity_cost_EL)
-
-    # Fuel cell constraints including investment decision
-    @constraint(model, Invest_FC == c_FC*data.capacity_cost_FC)
-
-
-
     @constraint(model, Total_demand == sum(data.edem[p] for p=1:data.p))
     @constraint(model, Total_PV_GEN == sum(data.re_PV[p]*c_PV for p=1:data.p))
     @constraint(model, Total_WT_GEN == sum(data.re_WT[p]*c_WT for p=1:data.p))  
     @constraint(model, Total_buy == sum(E_purchased[p] for p=1:data.p))  
     @constraint(model, Total_sell == sum(E_sold[p] for p=1:data.p))  
-
 
     #OPTIMIZE model
     optimize!(model); 

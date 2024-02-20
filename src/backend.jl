@@ -9,7 +9,8 @@ function startBackend()
         currentId::Int64 = dequeue!(processingQueue);
         jsonData::Dict{String, Any} = taskData[currentId];
         data::Data = initData(jsonData);
-        model = solve_model_fast(HiGHS.Optimizer, data);
+        #model = solve_model_fast(HiGHS.Optimizer, data);
+        model = solve_model_var(HiGHS.Optimizer, data);        
         status::MathOptInterface.TerminationStatusCode = termination_status(model);
         if(string(status) != "OPTIMAL" && string(status) != "LOCALLY_SOLVED")
             error("Model not solveable!");
@@ -18,16 +19,81 @@ function startBackend()
         end
     end
 
-    route("/getStatus/:id", method = GET) do 
-        response::HTTP.Messages.Response = HTTP.Messages.Response();
-        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8"]);
-        
+    function validateIdPOST(rawPayload, response::HTTP.Messages.Response)::Int64
+        local idJson::Any;
+        local id::Int64;
+        try
+            idJson = JSON.parse(rawPayload)["id"];
+        catch _
+            response.status = 400;
+            response.body = "JSON key id in body missing.";
+            return -1;
+        end
+
+        try
+            id = idJson;
+        catch _
+            response.status = 400;
+            response.body = format("Id: {:s} not of type Int64.", idJson);
+            return -1;
+        end
+        return id;
+    end
+
+    function validateIdGET(payload, response::HTTP.Messages.Response)::Int64
         local id::Int64;
         try
             id = parse(Int64, payload(:id));
         catch _
             response.status = 400;
             response.body = format("Id: {:s} not of type Int64.", payload(:id));
+            return -1;
+        end
+        return id;
+    end
+
+    route("/processModelInput", method = POST) do
+        response::HTTP.Messages.Response = HTTP.Messages.Response();
+        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8", "Access-Control-Allow-Origin" => "*"]);
+        
+        id::Int64 = validateIdPOST(rawpayload(), response);
+        if id == -1
+            return response;
+        end
+
+        try
+            validateUserData(JSON.parse(rawpayload()));
+        catch e
+            response.status = 400;
+            response.body = format("Input data not correct: {:s}", e.msg);
+            return response;
+        end
+
+        task::Task = Task(startJob);
+        push!(currentJobsSet, id);
+        enqueue!(processingQueue, id);
+        taskList[id] = task;
+
+        taskData[id] = JSON.parse(rawpayload());
+
+        @async begin
+                sleep(1);
+                schedule(task);
+                yield();
+        end
+        #startJob()
+
+        response.status = 202;
+        response.body = format("Started job {:s}.", id);
+        return response;
+    end
+
+    route("/getStatus/:id", method = GET) do 
+        response::HTTP.Messages.Response = HTTP.Messages.Response();
+        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8"]);
+        
+        id::Int64 = validateIdGET(payload, response);
+        if id == -1
             return response;
         end
 
@@ -49,7 +115,7 @@ function startBackend()
             catch ex
                 try
                     msg = string(ex.task.exception.msg)
-                catch
+                catch _
                     msg = string(ex.task.exception)
                 end
             end
@@ -64,59 +130,13 @@ function startBackend()
         return response;
     end
 
-    route("/cleanJob/", method = POST) do 
-        response::HTTP.Messages.Response = HTTP.Messages.Response();
-        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8"]);
-
-        local idJson::Any;
-        local id::Int64;
-        try
-            idJson = JSON.parse(rawpayload())["id"];
-        catch _
-            response.status = 400;
-            response.body = "JSON key id in body missing.";
-            return response;
-        end
-        try
-            id = idJson;
-        catch _
-            response.status = 400;
-            response.body = format("Id: {:s} not of type Int64.", idJson);
-            return response;
-        end
-
-        try
-            if(!istaskdone(taskList[id]))
-                response.status = 400;
-                response.body = format("Task with id {:s} not done.", id);
-                return response;
-            end
-        catch _
-            response.status = 400;
-            response.body = format("Task with id {:s} not found.", id);
-            return response;
-        end
-        
-        delete!(currentJobsSet, id);
-        delete!(taskList, id);
-        delete!(taskData, id)
-        pathToRemove::String = joinpath(@__DIR__, string("pdfgen/temp_", id));
-        rm(pathToRemove, recursive = true);
-
-        response.status = 200;
-        response.body = format("Cleaned job {:s}.", id);
-        return response;
-    end
     
     route("/getResults/:id", method = GET) do 
         response::HTTP.Messages.Response = HTTP.Messages.Response();
         response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8"]);
-        local id::Int64;
-        try
-            id = parse(Int64, payload(:id));
-        catch _
-            response.status = 400;
-            response.body = format("Id: {:s} not of type Int64.", payload(:id));
+
+        id::Int64 = validateIdGET(payload, response);
+        if id == -1
             return response;
         end
 
@@ -141,8 +161,7 @@ function startBackend()
         pathToPdf::String = joinpath(basePath, "report.pdf");
         pathToImg1::String = joinpath(basePath, "Eigenverbrauch.png");
         pathToImg2::String = joinpath(basePath, "Autarkiegrad.png");
-        pathToImg3::String = joinpath(basePath, "SOC.png");
-        # TODO: add text output data
+        pathToImg3::String = joinpath(basePath, "Lastverlauf.png");
         returnDictionary= Dict(
             "pathToPdf" => pathToPdf, 
             "pathToImg1" => pathToImg1, 
@@ -159,51 +178,35 @@ function startBackend()
         return JSON.json(returnDictionary);
     end
 
-    route("/processModelInput", method = POST) do
+    route("/cleanJob/", method = POST) do 
         response::HTTP.Messages.Response = HTTP.Messages.Response();
-        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8","Access-Control-Allow-Origin" => "*"]);
+        response.headers = (["Content-Type" => "text/plain", "charset" => "utf-8"]);
 
-        local idJson::Any;
-        local id::Int64;
+        id::Int64 = validateIdPOST(rawpayload(), response);
+        if id == -1
+            return response;
+        end
+
         try
-            idJson = JSON.parse(rawpayload())["id"];
+            if(!istaskdone(taskList[id]))
+                response.status = 400;
+                response.body = format("Task with id {:s} not done.", id);
+                return response;
+            end
         catch _
             response.status = 400;
-            response.body = "JSON key id in body missing.";
-            return response;
-        end
-        try
-            id = idJson;
-        catch _
-            response.status = 400;
-            response.body = format("Id: {:s} not of type Int64.", idJson);
+            response.body = format("Task with id {:s} not found.", id);
             return response;
         end
 
-        try
-            validateUserData(JSON.parse(rawpayload()));
-        catch e
-            response.status = 400;
-            response.body = format("Input data not correct: {:s}", e.msg);
-            return response;
-        end
+        delete!(currentJobsSet, id);
+        delete!(taskList, id);
+        delete!(taskData, id)
+        pathToRemove::String = joinpath(@__DIR__, string("pdfgen/temp_", id));
+        rm(pathToRemove, recursive = true);
 
-        task::Task = Task(startJob);
-        push!(currentJobsSet, id);
-        enqueue!(processingQueue, id);
-        taskList[id] = task;
-
-        taskData[id] = JSON.parse(rawpayload());
-
-        @async begin
-            sleep(1);
-            schedule(task);
-            yield();
-        end
-        #startJob()
-    
-        response.status = 202;
-        response.body = format("Started job {:s}.", id);
+        response.status = 200;
+        response.body = format("Cleaned job {:s}.", id);
         return response;
     end
 
