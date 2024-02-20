@@ -12,7 +12,6 @@ function generatePdfTest()
 end
 
 
-
 function generatePdf(model::Model, id::Int64, data::Data)
     dir::String = string(joinpath(@__DIR__, joinpath("pdfGen","temp_")), id);
     if(isdir(dir))
@@ -26,7 +25,6 @@ function generatePdf(model::Model, id::Int64, data::Data)
     filePath::String = joinpath(dir, "report.typ");
     touch(filePath);
 
-    # TODO: handle IO exceptions 
     # open report.typ tile
     file::IO = open(filePath, "w");
 
@@ -35,7 +33,7 @@ function generatePdf(model::Model, id::Int64, data::Data)
     graphNames = map(path::String -> string("\"", replace(joinpath(dir, path), "\\"=>"\\\\"), "\""), graphNames);
     inputData::String = buildTypstInputDataDictionary(data);
     outputData::String = buildTypstOutputDataDictionary(model, dir);
-    arguments::Vector{String} = [string("", id), "[Ole]", graphNames[1], graphNames[2], graphNames[3], inputData, outputData];
+    arguments::Vector{String} = [string("", id),  graphNames[1], graphNames[2], graphNames[3], inputData, outputData];
     argumentString::String = join(arguments, ", ");
     settingsToInclude::String = joinpath("..", "pageSettings.typ");
     toWrite::String = format("#import \"{:s}\":conf \n#show: doc => conf({:s}) \n", settingsToInclude, argumentString);
@@ -121,6 +119,7 @@ function buildTypstOutputDataDictionary(model::Model, dir::String)::String
 
     return string(out, ")");
 end
+
 function formatNum(x,fmt="%12.2f")::String
     return string("\"", Printf.format(Printf.Format(fmt), x), "\"")
 end
@@ -138,7 +137,7 @@ function generateGraphs(dir::String, names::Vector{String}, model::Model, data::
     eigenverbrauchPath::String = joinpath(dir, names[1]);
     savefig(eigenverbrauchPlot, eigenverbrauchPath);
 
-    # Autarkiegrad
+    # Autarkiegrad pie charts
     labelsAutarkiegrad::Vector{String} = ["eingekaufter Strom", "generierter Strom"];
 
     total_buy::Float64 = value.(model[:Total_buy]);

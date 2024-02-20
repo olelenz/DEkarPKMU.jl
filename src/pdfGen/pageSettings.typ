@@ -1,4 +1,4 @@
-#let conf(id, name, pathEigenverbrauch, pathAutarkiegrad, pathLastverlauf, inputData, outputData) = {
+#let conf(id, pathEigenverbrauch, pathAutarkiegrad, pathLastverlauf, inputData, outputData) = {
   set page(
     paper: "a4",
     header: [
