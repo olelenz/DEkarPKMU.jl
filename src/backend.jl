@@ -19,7 +19,7 @@ function startBackend()
         end
     end
 
-    function validateIdPOST(rawPayload, response::HTTP.Messages.Response)::Int64
+    function validateIdPOST(rawPayload::String, response::HTTP.Messages.Response)::Int64
         local idJson::Any;
         local id::Int64;
         try
@@ -40,7 +40,7 @@ function startBackend()
         return id;
     end
 
-    function validateIdGET(payload, response::HTTP.Messages.Response)::Int64
+    function validateIdGET(payload::Function, response::HTTP.Messages.Response)::Int64
         local id::Int64;
         try
             id = parse(Int64, payload(:id));
