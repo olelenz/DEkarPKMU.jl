@@ -143,10 +143,10 @@ function generateGraphs(dir::String, names::Vector{String}, model::Model, data::
     total_buy::Float64 = value.(model[:Total_buy]);
     total_gen::Float64 = value.(model[:Total_PV_GEN]) + value.(model[:Total_WT_GEN]);
     sum_energy_input::Float64 = total_buy + total_gen;
-    println(total_buy)
-    println(sum_energy_input)
-    println(total_gen)
-    println(sum_energy_input)
+    #println(total_buy)
+    #println(sum_energy_input)
+    #println(total_gen)
+    #println(sum_energy_input)
     valuesAutarkiegrad::Vector{Float64} = [total_buy/sum_energy_input, total_gen/sum_energy_input];
 
     autarkiegradPlot::Plots.Plot{Plots.GRBackend} = pie(labelsAutarkiegrad, valuesAutarkiegrad, dpi = 1000, title = "Autarkiegrad");

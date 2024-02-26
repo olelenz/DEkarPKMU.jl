@@ -157,7 +157,8 @@ function startBackend()
             return response;
         end
         
-        basePath::String = joinpath(string("/pdfGen/temp_", id));
+        #basePath::String = joinpath(@__DIR__, string("/pdfGen/temp_", id));
+        basePath::String = string("/pdfGen/temp_", id);
         pathToPdf::String = joinpath(basePath, "report.pdf");
         pathToImg1::String = joinpath(basePath, "Eigenverbrauch.png");
         pathToImg2::String = joinpath(basePath, "Autarkiegrad.png");
