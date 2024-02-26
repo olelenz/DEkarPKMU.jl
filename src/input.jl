@@ -386,10 +386,11 @@ function validateUserData(userData::Dict{String, Any})
     throwValidationError("years", INPUT_TYPE_GREATER_ZERO, Int64, userData);
     throwValidationError("shift_edem", INPUT_TYPE_BOOL, Int64, userData);
     throwValidationError("shifts", INPUT_TYPE_GREATER_ZERO, Int64, userData);
-    typeEdem::DataType = typeof(userData["edem"]);
-    if(!(typeEdem <: Real) && !(typeEdem <: Vector{Real}))
-        throw(AssertionError(format(INVALID_INPUT_TYPE, "edem", "Float64 or Vector{Float64}", string(typeof(userData["edem"])))));
-    end
+    #typeEdem::DataType = typeof(userData["edem"]);
+    #if(!(typeEdem <: Real) && !(typeEdem <: Vector{Real}))
+    #    throw(AssertionError(format(INVALID_INPUT_TYPE, "edem", "Float64 or Vector{Float64}", string(typeof(userData["edem"])))));
+    #end
+    throwValidationError("edem", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
     throwValidationError("beta_buy", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
     throwValidationError("beta_sell", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
     throwValidationError("WACC", INPUT_TYPE_GREATER_EQUAL_ZERO, Real, userData);
@@ -411,7 +412,7 @@ function addUserDataToData(data::Data, userData::Dict{String, Any})
     data.usage_PV = userData["usage_PV"];
     data.usage_bat = userData["usage_bat"];
     data.usage_H = userData["usage_H"];
-    #data.years = userData["years"];  # TODO: implement
+    data.years = userData["years"];
     data.years = 20;
     data.shift_edem = userData["shift_edem"];     
     data.shifts = userData["shifts"];
