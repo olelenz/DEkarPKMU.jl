@@ -1,1 +1,0 @@
-HEADING::String = "DEkarPKMU Analysis";

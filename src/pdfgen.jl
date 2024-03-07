@@ -2,16 +2,6 @@ using Formatting
 using Plots
 using Plots.PlotMeasures
 
-include("./pdfGen/varTemplate.jl");
-function generatePdfTest()
-    #data::Data = initDataXLSX("/Users/ole/Documents/Uni/WS2324/POM/master_thesis/230717_Energiesystemmodellierung_Input_Output.xlsx");
-    data::Data = initDataFromString(initSampleJSON());
-    id::Int64 = rand(0:9223372036854775807);
-    model = solve_model_fast(HiGHS.Optimizer, data);
-    generatePdf(model, id, data);
-end
-
-
 function generatePdf(model::Model, id::Int64, data::Data)
     dir::String = string(joinpath(@__DIR__, joinpath("pdfGen","temp_")), id);
     if(isdir(dir))
@@ -56,7 +46,7 @@ function generatePdf(model::Model, id::Int64, data::Data)
     command3 = "typst";
     compileCommandMac::Cmd = `$command3 $command0 $fileAsArgument --root="/"`;
     
-    run(compileCommand);
+    run(compileCommandMac);
 end
 
 function generateKennzahlen(model::Model)::Dict{String, Number}
@@ -143,10 +133,6 @@ function generateGraphs(dir::String, names::Vector{String}, model::Model, data::
     total_buy::Float64 = value.(model[:Total_buy]);
     total_gen::Float64 = value.(model[:Total_PV_GEN]) + value.(model[:Total_WT_GEN]);
     sum_energy_input::Float64 = total_buy + total_gen;
-    #println(total_buy)
-    #println(sum_energy_input)
-    #println(total_gen)
-    #println(sum_energy_input)
     valuesAutarkiegrad::Vector{Float64} = [total_buy/sum_energy_input, total_gen/sum_energy_input];
 
     autarkiegradPlot::Plots.Plot{Plots.GRBackend} = pie(labelsAutarkiegrad, valuesAutarkiegrad, dpi = 1000, title = "Autarkiegrad");
@@ -171,6 +157,3 @@ function generateGraphs(dir::String, names::Vector{String}, model::Model, data::
     savefig(outputPlot, lastverlaufPath);
 end
 
-function testG()
-    generateGraphs("/Users/ole/Documents/Uni/WS2324/POM/DEkarPKMU.jl/src/pdfGen", ["samplePlot.png"], Nothing);
-end

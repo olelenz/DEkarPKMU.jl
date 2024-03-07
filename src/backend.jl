@@ -1,4 +1,3 @@
-
 function startBackend()
     currentJobsSet::Set{Int64} = Set{Int64}();
     processingQueue::Queue{Int64} = Queue{Int64}();
@@ -9,7 +8,6 @@ function startBackend()
         currentId::Int64 = dequeue!(processingQueue);
         jsonData::Dict{String, Any} = taskData[currentId];
         data::Data = initData(jsonData);
-        #model = solve_model_fast(HiGHS.Optimizer, data);
         model = solve_model_var(HiGHS.Optimizer, data);        
         status::MathOptInterface.TerminationStatusCode = termination_status(model);
         if(string(status) != "OPTIMAL" && string(status) != "LOCALLY_SOLVED")
@@ -81,7 +79,6 @@ function startBackend()
                 schedule(task);
                 yield();
         end
-        #startJob()
 
         response.status = 202;
         response.body = format("Started job {:s}.", id);
@@ -212,5 +209,5 @@ function startBackend()
         return response;
     end
 
-    up(8001, async = false);
+    up(8010, async = false);
 end

@@ -450,11 +450,6 @@ function addRemainingOnInputDependingData(data::Data)
 end
 
 function predictEdem(total::Number, shifts::Int64)::Vector{Float64}
-    # (vec / baseSUm) * total = newVec <==> newVec = vec * (total / baseSum)
-    # should be dependent on the amount of shifts in the company
-    #baseSum::Float64 = 1000.5;
-    #multiplicator::Float64 = total / baseSum;
-    #outVec::Vector{Float64} = edemBaseVec * multiplicator;
     outVec::Vector{Float64} = edemBaseVec;
     if(shifts <= 1)
         outVec = edemNormAvgOneShift * total;
@@ -470,7 +465,7 @@ function stretchValueToVector(size::Int64, value::Number)::Vector{Float64}
     return fill(value, size);
 end
 
-function initDataXLSX(file::String)::Data
+function initDataXLSX(file::String)::Data  # function from Czygan
     data::Data = Data();
     
     x::XLSX.XLSXFile = XLSX.readxlsx(file);

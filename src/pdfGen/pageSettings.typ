@@ -12,7 +12,7 @@
         columns: (33%, 33%, 33%),
         align(bottom + center, figure(
           image(
-            "./img/TU_Logo_kurz_RGB_schwarz.jpg", 
+            "./img/TU_Logo_kurz_RGB.png", 
             width: 30%,
           )
         )),
@@ -173,8 +173,6 @@
     [],
 
   )
-
-//[Gesamte Energiekosten = (Kapitalwert + Investitionen - Restwerte) times Annuitätenfaktor]
 
   figure(
     image(
