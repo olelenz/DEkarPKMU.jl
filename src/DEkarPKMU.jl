@@ -1,8 +1,8 @@
 module DEkarPKMU
 
-export solve_model, solve_model_fast, solve_model_var
+export solve_model_var
 export Data, dataToJSON, JSONToData, initData, initDataXLSX, initSampleJSON, validateUserData
-export generatePdfTest, generatePdf, testG
+export generatePdf
 export startBackend
 
 using Pkg;
@@ -17,17 +17,6 @@ include(joinpath(@__DIR__, "input.jl"));
 include(joinpath(@__DIR__, "model.jl"));
 include(joinpath(@__DIR__, "pdfgen.jl"));
 include(joinpath(@__DIR__, "backend.jl"));
-
-#before(Genie.Router) do
-#    response.headers["Access-Control-Allow-Origin"] = "*"
-#    response.headers["Access-Control-Allow-Methods"] = "GET,POST,FETCH"
-#    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-#end
-
-
-function modelTest()
-    generatePdfTest();
-end
 
 function __init__()
     startBackend()
