@@ -39,4 +39,4 @@ GitHub Link: [https://github.com/olelenz/DEkarPKMU.jl](https://github.com/olelen
 
 Project Link: [https://www.tu.berlin/pom/forschung/projekte/dekarp](https://www.tu.berlin/pom/forschung/projekte/dekarp)
 
-Website Link: [http://dekarp.pom.tu-berlin.de](http://dekarp.pom.tu-berlin.de)
+Website Link: [https://dekarp.pom.tu-berlin.de](http://dekarp.pom.tu-berlin.de)
