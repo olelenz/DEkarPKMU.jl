@@ -168,7 +168,12 @@ function startBackend()
             "pathToImg2" => pathToImg2, 
             "pathToImg3" => pathToImg3);
 
-        kennzahlenDictionary::Dict{String, Number} = JSON3.read(read(joinpath(basePath, "Kennzahlen.txt"), String), Dict{String, Number});
+        kennzahlenDictionary::Dict{String, Number} = JSON3.read(read(joinpath("pdfGen", basePath, "Kennzahlen.txt"), String), Dict{String, Number});
+        :q
+
+:w
+
+
         kennzahlenDictionaryString::Dict{String, String} = Dict{String, String}();
         for (key, value) in kennzahlenDictionary
             kennzahlenDictionaryString[key] = string(Printf.format(Printf.Format("%.2f"), value));
